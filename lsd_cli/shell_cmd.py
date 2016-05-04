@@ -1,6 +1,7 @@
-from xtermcolor import colorize
+import pydoc
 
-from print_utils import *
+from lsd_cli.print_utils import *
+from xtermcolor import colorize
 
 
 def __exec_leaplog(shell_ctx, filename):
@@ -38,8 +39,7 @@ def __h(_):
 input is interpreted as a datalog sentence.\n\n""")
 
     for k, v in __commands.iteritems():
-        print(v)
-        shell_help.append(colorize(v['name'], rgb=0x298594))
+        shell_help.append(colorize(v['name'], rgb=0x71d1df))
         shell_help.append('\n')
         shell_help.append('  ')
         shell_help.append(v['help'])
@@ -63,23 +63,23 @@ def __rs(shell_ctx, uri, filename):
 def __lr(shell_ctx):
     json_mode_enabled = shell_ctx['json_mode_enabled']
     lsd_api = shell_ctx['lsd_api']
-    result = lsd_api.rulsets()
+    result = lsd_api.rulesets()
     print_leaplog_json(result, json_mode_enabled)
 
 
-def __cx(_):
+def __cx(shell_ctx, prefix, uri):
     print(colorize("Not implemented!", rgb=0xdd5a25))
 
 
-def __lc(_):
+def __lc(filename):
     print(colorize("Not implemented!", rgb=0xdd5a25))
 
 
-# shell commands dispatch table 
+# shell commands dispatch table
 __commands = {
     'h': {'cmd': __h, 'name': 'h()', 'help': 'Prints this help.'},
     'c': {'cmd': __c, 'name': 'c()', 'help': 'Clears the terminal.'},
-    'll': {'cmd': __ll, 'name': 'll(filename)',
+    'll': {'cmd': __ll, 'name': 'ls(filename)',
            'help': 'Loads an execute a leaplog program from filename.'},
     'rs': {'cmd': __rs, 'name': 'rs(uri, filename)',
            'help': 'Loads a ruleset from filename to LSD with the given uri name.'},

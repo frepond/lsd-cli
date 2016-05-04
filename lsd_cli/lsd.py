@@ -30,7 +30,7 @@ class Lsd:
 
         return result
 
-    def rulsets(self):
+    def rulesets(self):
         url = 'http://{0}:{1}/rulesets'.format(self.__host, self.__port)
         headers = {
             'Authorization': self.__tenant,

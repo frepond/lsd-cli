@@ -15,9 +15,9 @@ from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
 from xtermcolor import colorize
 
-from lsd import Lsd
-from print_utils import *
-from shell_cmd import exec_cmd
+from lsd_cli.lsd import Lsd
+from lsd_cli.print_utils import *
+from lsd_cli.shell_cmd import exec_cmd
 
 version = pkg_resources.require("lsd-cli")[0].version
 vi_mode_enabled = False
@@ -32,7 +32,9 @@ def get_bottom_toolbar_tokens(cli):
     output = "Json" if json_mode_enabled else 'Tabular'
 
     return [(Token.Toolbar, ' lsd-cli v{0}. '.format(version)),
-            (Token.Toolbar, ' [F4] %s ' % text), (Token.Toolbar, ' [F5] %s ' % output)]
+            (Token.Toolbar, ' h() Help '),
+            (Token.Toolbar, ' [F4] %s ' % text),
+            (Token.Toolbar, ' [F5] %s ' % output)]
 
 
 def get_title():
@@ -86,17 +88,18 @@ def main(tenant, host, port):
 
     # Add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F4)
-    def _f4(event):
+    def _f4(_event):
         """ Toggle between Emacs and Vi mode. """
         global vi_mode_enabled
         vi_mode_enabled = not vi_mode_enabled
 
     # Add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F5)
-    def _f5(event):
+    def _f5(_event):
         """ Toggle between Json and Tabular mode. """
         global json_mode_enabled
         json_mode_enabled = not json_mode_enabled
+
 
     print(colorize('Welcome to LSD command line interface!', rgb=0xffc853))
 

@@ -109,13 +109,13 @@ def main(tenant, host, port):
 
     clear()
     print(colorize("""
-Welcome to    _/         _/_/_/    _/_/_/
-             _/         _/        _/    _/
-            _/         _/_/_/    _/    _/
-           _/             _/    _/    _/
-          _/_/_/_/   _/_/_/    _/_/_/      command line interface!
+Welcome to    _/         _/_/_/_/    _/_/_/
+             _/         _/          _/    _/
+            _/         _/_/_/_/    _/    _/
+           _/               _/    _/    _/
+          _/_/_/_/   _/_/_/_/    _/_/_/      command line interface!
 """
-                   , rgb=0xffc853))
+                   , rgb=0x2cb9d0))
 
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,

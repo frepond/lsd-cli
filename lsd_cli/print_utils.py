@@ -9,7 +9,7 @@ def __format_value(v):
     if (v.get('@id', None)):
         return '<{0}>'.format(v['@id'])
     elif (v.get('@value', None) is not None):
-        return v
+        return v['@value']
     else:
         return v
 

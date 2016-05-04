@@ -58,7 +58,7 @@ def __process_cmd(lsd_api, cmd):
 
     if not match:  # no matching command then interpreted as query or fact
         result = lsd_api.leaplog(cmd)
-        print_leaplog_json(result, json_mode_enabled)
+        print_leaplog_result(result, json_mode_enabled)
     else:
         cmd = match.group(1)
         params = match.group(2)
@@ -69,8 +69,8 @@ def __process_cmd(lsd_api, cmd):
 
         try:
             exec_cmd(shell_ctx, cmd, params)
-        except:
-            print(colorize('unknown command', rgb=0xdd5a25))
+        except Exception as e:
+            print(colorize(e, rgb=0xdd5a25))
             if debug:
                 traceback.print_exc()
 

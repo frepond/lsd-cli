@@ -15,7 +15,7 @@ def __exec_leaplog(shell_ctx, filename):
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.leaplog(content)
-    print_leaplog_json(result, json_mode_enabled)
+    print_leaplog_result(result, json_mode_enabled)
 
 
 def __exec_ruleset(shell_ctx, uri, filename):
@@ -29,7 +29,8 @@ def __exec_ruleset(shell_ctx, uri, filename):
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.create_ruleset(uri, ruleset)
-    print_leaplog_json(result, json_mode_enabled)
+    print(result)
+    print_json_result(result, json_mode_enabled)
 
 
 def __h(_):
@@ -64,7 +65,7 @@ def __lr(shell_ctx):
     json_mode_enabled = shell_ctx['json_mode_enabled']
     lsd_api = shell_ctx['lsd_api']
     result = lsd_api.rulesets()
-    print_json(result, json_mode_enabled)
+    print_json_result(result, json_mode_enabled)
 
 
 def __cx(shell_ctx, prefix, uri):
@@ -79,7 +80,7 @@ def __lc(filename):
 __commands = {
     'h': {'cmd': __h, 'name': 'h()', 'help': 'Prints this help.'},
     'c': {'cmd': __c, 'name': 'c()', 'help': 'Clears the terminal.'},
-    'll': {'cmd': __ll, 'name': 'ls(filename)',
+    'll': {'cmd': __ll, 'name': 'll(filename)',
            'help': 'Loads an execute a leaplog program from filename.'},
     'rs': {'cmd': __rs, 'name': 'rs(uri, filename)',
            'help': 'Loads a ruleset from filename to LSD with the given uri name.'},

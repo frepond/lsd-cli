@@ -2,7 +2,7 @@ import time
 
 import requests
 
-timer = 0
+timer = 0.0
 tuples = 0
 
 

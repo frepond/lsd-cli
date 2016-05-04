@@ -29,32 +29,42 @@ def __prepare_data(variables, results):
     return rows
 
 
-def print_leaplog_json(leaplog_json, json_mode=True):
-    if not leaplog_json:
+def print_leaplog_result(result, json_mode=True):
+    if not result:
         output = 'No results.'
     elif json_mode:
-        output = highlight(unicode(json.dumps(leaplog_json, indent=4), 'UTF-8'),
-                                     lexers.JsonLexer(), formatters.TerminalFormatter())
+        output = highlight(unicode(json.dumps(result, indent=4), 'UTF-8'),
+                           lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
         title_context = underline("context")
-        context = highlight(unicode(json.dumps(leaplog_json['@context'], indent=4), 'UTF-8'),
+        context = highlight(unicode(json.dumps(result['@context'], indent=4), 'UTF-8'),
                             lexers.JsonLexer(), formatters.TerminalFormatter())
-        rows = __prepare_data(leaplog_json['variables'], leaplog_json['results'])
-        tab = tabulate.tabulate(rows, headers=leaplog_json['variables'])
+        rows = __prepare_data(result['variables'], result['results'])
+        tab = tabulate.tabulate(rows, headers=result['variables'])
         output = "%(title_context)s\n%(context)s%(tab)s" % locals()
 
     pydoc.pager(output)
 
 
-def print_json(json_list, json_mode=True):
-    if not json_list:
+def __is_list(obj):
+    return hasattr(obj, '__iter__') and not isinstance(obj, str) and not isinstance(obj, dict)
+
+
+def print_json_result(result, json_mode=True):
+    if not result:
         output = 'No results.'
     elif json_mode:
-        output = highlight(unicode(json.dumps(json_list, indent=4), 'UTF-8'),
-                                     lexers.JsonLexer(), formatters.TerminalFormatter())
+        output = highlight(unicode(json.dumps(result, indent=4), 'UTF-8'),
+                           lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
-        rows = [[item[k] for k in item] for item in json_list]
-        output = tabulate.tabulate(rows, headers=json_list[0].keys())
+        if not __is_list(result):
+            result = [result]
+
+        print(__is_list(result))
+        print(result)
+
+        rows = [[item[k] for k in item] for item in result]
+        output = tabulate.tabulate(rows, headers=result[0].keys())
 
     pydoc.pager(output)
 

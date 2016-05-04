@@ -28,6 +28,3 @@ Simply run the following to install it locally:
 Then:
 
     $ export PATH=$PATH:~/.local/bin
-
-
-

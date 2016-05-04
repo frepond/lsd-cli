@@ -78,4 +78,4 @@ def underline(s):
 
 
 def clear():
-    print(chr(27) + "[2J")
+    print("%c[2J\033[1;1H" % 27)

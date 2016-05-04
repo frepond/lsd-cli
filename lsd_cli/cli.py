@@ -107,6 +107,7 @@ def main(tenant, host, port):
         global json_mode_enabled
         json_mode_enabled = not json_mode_enabled
 
+    clear()
     print(colorize("""
 Welcome to    _/         _/_/_/    _/_/_/
              _/         _/        _/    _/

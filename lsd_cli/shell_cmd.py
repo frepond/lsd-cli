@@ -64,7 +64,7 @@ def __lr(shell_ctx):
     json_mode_enabled = shell_ctx['json_mode_enabled']
     lsd_api = shell_ctx['lsd_api']
     result = lsd_api.rulesets()
-    print_leaplog_json(result, json_mode_enabled)
+    print_json(result, json_mode_enabled)
 
 
 def __cx(shell_ctx, prefix, uri):

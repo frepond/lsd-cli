@@ -44,12 +44,17 @@ class Lsd:
 
         return result
 
-    def ruleset(self, ruleset):
+    def create_ruleset(self, uri, source):
         url = 'http://{0}:{1}/rulesets'.format(self.__host, self.__port)
         headers = {
             'Authorization': self.__tenant,
             'Accept': 'application/json',
             'Accept-Encoding': 'gzip'
+        }
+
+        ruleset = {
+            'uri': uri,
+            'source': source
         }
 
         r = requests.post(url, json=ruleset, headers=headers)

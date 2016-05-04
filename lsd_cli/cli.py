@@ -101,7 +101,14 @@ def main(tenant, host, port):
         json_mode_enabled = not json_mode_enabled
 
 
-    print(colorize('Welcome to LSD command line interface!', rgb=0xffc853))
+    print(colorize("""
+Welcome to    _/         _/_/_/    _/_/_/
+             _/         _/        _/    _/
+            _/         _/_/_/    _/    _/
+           _/             _/    _/    _/
+          _/_/_/_/   _/_/_/    _/_/_/      command line interface!
+"""
+, rgb=0xffc853))
 
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,

@@ -30,38 +30,34 @@ def __prepare_data(variables, results):
 
 
 def print_leaplog_json(leaplog_json, json_mode=True):
-    if json_mode:
-        formatted_result = highlight(unicode(json.dumps(leaplog_json, indent=4), 'UTF-8'),
+    if not leaplog_json:
+        output = 'No results.'
+    elif json_mode:
+        output = highlight(unicode(json.dumps(leaplog_json, indent=4), 'UTF-8'),
                                      lexers.JsonLexer(), formatters.TerminalFormatter())
-
-        pydoc.pager(formatted_result)
     else:
         title_context = underline("context")
         context = highlight(unicode(json.dumps(leaplog_json['@context'], indent=4), 'UTF-8'),
                             lexers.JsonLexer(), formatters.TerminalFormatter())
         rows = __prepare_data(leaplog_json['variables'], leaplog_json['results'])
         tab = tabulate.tabulate(rows, headers=leaplog_json['variables'])
-        result = "%(title_context)s\n%(context)s%(tab)s" % locals()
-        pydoc.pager(result)
+        output = "%(title_context)s\n%(context)s%(tab)s" % locals()
+
+    pydoc.pager(output)
 
 
 def print_json(json_list, json_mode=True):
-    try:
-        if json_mode:
-            formatted_result = highlight(unicode(json.dumps(json_list, indent=4), 'UTF-8'),
-                                         lexers.JsonLexer(), formatters.TerminalFormatter())
+    if not json_list:
+        output = 'No results.'
+    elif json_mode:
+        output = highlight(unicode(json.dumps(json_list, indent=4), 'UTF-8'),
+                                     lexers.JsonLexer(), formatters.TerminalFormatter())
+    else:
+        rows = [[item[k] for k in item] for item in json_list]
+        output = tabulate.tabulate(rows, headers=json_list[0].keys())
 
-            pydoc.pager(formatted_result)
-        else:
-            if json_list:
-                    rows = [[item[k] for k in item] for item in json_list]
-                    tab = tabulate.tabulate(rows, headers=json_list[0].keys())
-            else:
-                tab = []
+    pydoc.pager(output)
 
-            pydoc.pager(tab)
-    except Exception as e:
-                print(e)
 
 def bold(s):
     return '\033[1m%s\033[0m' % s

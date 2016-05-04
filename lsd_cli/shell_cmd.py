@@ -28,7 +28,7 @@ def __exec_ruleset(shell_ctx, uri, filename):
     except Exception as e:
         raise Exception("ERROR: could not read {0}".format(filename))
 
-    result = lsd_api.ruleset(uri, ruleset)
+    result = lsd_api.create_ruleset(uri, ruleset)
     print_leaplog_json(result, json_mode_enabled)
 
 

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import re
+import traceback
 from os.path import expanduser
 
 import click
@@ -15,6 +16,7 @@ from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
 from xtermcolor import colorize
 
+from lsd_cli import lsd
 from lsd_cli.lsd import Lsd
 from lsd_cli.print_utils import *
 from lsd_cli.shell_cmd import exec_cmd
@@ -26,6 +28,8 @@ click.disable_unicode_literals_warning = True
 home = expanduser("~")
 history = FileHistory(home + '/.lsd-cli_history')
 auto_suggest = AutoSuggestFromHistory()
+debug = True
+
 
 def get_bottom_toolbar_tokens(cli):
     text = 'Vi' if vi_mode_enabled else 'Emacs'
@@ -34,7 +38,8 @@ def get_bottom_toolbar_tokens(cli):
     return [(Token.Toolbar, ' lsd-cli v{0}. '.format(version)),
             (Token.Toolbar, ' h() Help '),
             (Token.Toolbar, ' [F4] %s ' % text),
-            (Token.Toolbar, ' [F5] %s ' % output)]
+            (Token.Toolbar, ' [F5] %s ' % output),
+            (Token.Toolbar, ' (%0.3f ms, %d tuples) ' % (lsd.timer, lsd.tuples))]
 
 
 def get_title():
@@ -66,6 +71,8 @@ def __process_cmd(lsd_api, cmd):
             exec_cmd(shell_ctx, cmd, params)
         except:
             print(colorize('unknown command', rgb=0xdd5a25))
+            if debug:
+                traceback.print_exc()
 
 
 @click.command()
@@ -100,7 +107,6 @@ def main(tenant, host, port):
         global json_mode_enabled
         json_mode_enabled = not json_mode_enabled
 
-
     print(colorize("""
 Welcome to    _/         _/_/_/    _/_/_/
              _/         _/        _/    _/
@@ -108,7 +114,7 @@ Welcome to    _/         _/_/_/    _/_/_/
            _/             _/    _/    _/
           _/_/_/_/   _/_/_/    _/_/_/      command line interface!
 """
-, rgb=0xffc853))
+                   , rgb=0xffc853))
 
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,

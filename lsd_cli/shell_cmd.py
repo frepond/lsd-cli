@@ -1,7 +1,6 @@
-import pydoc
+from xtermcolor import colorize
 
 from lsd_cli.print_utils import *
-from xtermcolor import colorize
 
 
 def __exec_leaplog(shell_ctx, filename):
@@ -29,7 +28,7 @@ def __exec_ruleset(shell_ctx, uri, filename):
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.create_ruleset(uri, ruleset)
-    print(result)
+    click.echo(result)
     print_json_result(result, json_mode_enabled)
 
 
@@ -46,7 +45,7 @@ input is interpreted as a datalog sentence.\n\n""")
         shell_help.append(v['help'])
         shell_help.append('\n\n')
 
-    pydoc.pager(''.join(shell_help))
+    click.echo_via_pager(''.join(shell_help))
 
 
 def __c(_):
@@ -69,11 +68,11 @@ def __lr(shell_ctx):
 
 
 def __cx(shell_ctx, prefix, uri):
-    print(colorize("Not implemented!", rgb=0xdd5a25))
+    click.echo(colorize("Not implemented!", rgb=0xdd5a25))
 
 
 def __lc(filename):
-    print(colorize("Not implemented!", rgb=0xdd5a25))
+    click.echo(colorize("Not implemented!", rgb=0xdd5a25))
 
 
 # shell commands dispatch table

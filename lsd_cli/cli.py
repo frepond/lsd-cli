@@ -4,7 +4,6 @@ import re
 import traceback
 from os.path import expanduser
 
-import click
 import pkg_resources  # part of setuptools
 from prompt_toolkit import prompt
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -70,7 +69,7 @@ def __process_cmd(lsd_api, cmd):
         try:
             exec_cmd(shell_ctx, cmd, params)
         except Exception as e:
-            print(colorize(e, rgb=0xdd5a25))
+            click.echo(colorize(e, rgb=0xdd5a25))
             if debug:
                 traceback.print_exc()
 
@@ -86,7 +85,7 @@ def main(tenant, host, port):
     try:
         lsd_api = Lsd(tenant, host, port)
     except Exception:
-        print('ERROR: connection refused {0}:{1}({2})'.format(
+        click.echo('ERROR: connection refused {0}:{1}({2})'.format(
             host, port, tenant))
         exit(1)
 
@@ -107,15 +106,15 @@ def main(tenant, host, port):
         global json_mode_enabled
         json_mode_enabled = not json_mode_enabled
 
-    clear()
-    print(colorize("""
+    click.clear()
+    click.echo(colorize("""
 Welcome to    _/         _/_/_/_/    _/_/_/
              _/         _/          _/    _/
             _/         _/_/_/_/    _/    _/
            _/               _/    _/    _/
           _/_/_/_/   _/_/_/_/    _/_/_/      command line interface!
 """
-                   , rgb=0x2cb9d0))
+                        , rgb=0x2cb9d0))
 
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,
@@ -127,4 +126,4 @@ Welcome to    _/         _/_/_/_/    _/_/_/
             if cmd:
                 __process_cmd(lsd_api, cmd)
         except Exception as e:
-            print(e.message)
+            click.echo(e.message)

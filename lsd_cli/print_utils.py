@@ -1,6 +1,6 @@
 import json
-import pydoc
 
+import click
 import tabulate
 from pygments import formatters, highlight, lexers
 
@@ -33,17 +33,17 @@ def print_leaplog_result(result, json_mode=True):
     if not result:
         output = 'No results.'
     elif json_mode:
-        output = highlight(unicode(json.dumps(result, indent=4), 'UTF-8'),
+        output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
         title_context = underline("context")
-        context = highlight(unicode(json.dumps(result['@context'], indent=4), 'UTF-8'),
+        context = highlight(json.dumps(result['@context'], indent=4),
                             lexers.JsonLexer(), formatters.TerminalFormatter())
         rows = __prepare_data(result['variables'], result['results'])
         tab = tabulate.tabulate(rows, headers=result['variables'])
         output = "%(title_context)s\n%(context)s%(tab)s" % locals()
 
-    pydoc.pager(output)
+    click.echo_via_pager(output)
 
 
 def __is_list(obj):
@@ -54,19 +54,16 @@ def print_json_result(result, json_mode=True):
     if not result:
         output = 'No results.'
     elif json_mode:
-        output = highlight(unicode(json.dumps(result, indent=4), 'UTF-8'),
+        output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
         if not __is_list(result):
             result = [result]
 
-        print(__is_list(result))
-        print(result)
-
         rows = [[item[k] for k in item] for item in result]
         output = tabulate.tabulate(rows, headers=result[0].keys())
 
-    pydoc.pager(output)
+    click.echo_via_pager(output)
 
 
 def bold(s):
@@ -78,4 +75,4 @@ def underline(s):
 
 
 def clear():
-    print("%c[2J\033[1;1H" % 27)
+    click.echo("%c[2J\033[1;1H" % 27)

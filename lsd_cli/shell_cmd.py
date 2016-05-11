@@ -68,7 +68,7 @@ def __lr(shell_ctx):
 
 
 def __cx(shell_ctx, prefix, uri):
-    click.echo(colorize("Not implemented!", rgb=0xdd5a25))
+    shell_ctx['prefix'][prefix] = uri
 
 
 def __lc(filename):

@@ -51,20 +51,21 @@ style = style_from_dict({
 })
 
 
-def __process_cmd(lsd_api, cmd):
+def __process_cmd(shell_ctx, cmd):
     prog = re.compile(r'(\w+)\((.*)\)')
     match = prog.match(cmd)
 
     if not match:  # no matching command then interpreted as query or fact
-        result = lsd_api.leaplog(cmd)
+        prefixes = ''
+
+        for prefix, uri in shell_ctx['prefix'].iteritems():
+            prefixes = prefixes + '@prefix {}: {}.\n'.format(prefix, uri)
+
+        result = shell_ctx['lsd_api'].leaplog(prefixes + '\n' + cmd)
         print_leaplog_result(result, json_mode_enabled)
     else:
         cmd = match.group(1)
         params = match.group(2)
-        shell_ctx = {
-            'lsd_api': lsd_api,
-            'json_mode_enabled': json_mode_enabled
-        }
 
         try:
             exec_cmd(shell_ctx, cmd, params)
@@ -116,6 +117,12 @@ Welcome to    _/         _/_/_/_/    _/_/_/
 """
                         , rgb=0x2cb9d0))
 
+    shell_ctx = {
+            'lsd_api': lsd_api,
+            'json_mode_enabled': json_mode_enabled,
+            'prefix': {}
+        }
+
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,
                      get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
@@ -124,6 +131,6 @@ Welcome to    _/         _/_/_/_/    _/_/_/
                      get_title=get_title)
         try:
             if cmd:
-                __process_cmd(lsd_api, cmd)
+                __process_cmd(shell_ctx, cmd)
         except Exception as e:
-            click.echo(e.message)
+            click.echo(e)

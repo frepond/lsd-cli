@@ -27,7 +27,7 @@ click.disable_unicode_literals_warning = True
 home = expanduser("~")
 history = FileHistory(home + '/.lsd-cli_history')
 auto_suggest = AutoSuggestFromHistory()
-debug = True
+debug = False
 
 
 def get_bottom_toolbar_tokens(cli):
@@ -58,7 +58,7 @@ def __process_cmd(shell_ctx, cmd):
     if not match:  # no matching command then interpreted as query or fact
         prefixes = ''
 
-        for prefix, uri in shell_ctx['prefix'].iteritems():
+        for prefix, uri in shell_ctx['prefix'].items():
             prefixes = prefixes + '@prefix {}: {}.\n'.format(prefix, uri)
 
         result = shell_ctx['lsd_api'].leaplog(prefixes + '\n' + cmd)

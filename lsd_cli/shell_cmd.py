@@ -38,7 +38,7 @@ def __h(_):
     shell_help.append("""The following are the list of built-in command. If no command is entered then the
 input is interpreted as a datalog sentence.\n\n""")
 
-    for k, v in __commands.iteritems():
+    for k, v in __commands.items():
         shell_help.append(colorize(v['name'], rgb=0x71d1df))
         shell_help.append('\n')
         shell_help.append('  ')

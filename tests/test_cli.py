@@ -7,23 +7,15 @@ from lsd_cli import cli
 def runner():
     return CliRunner()
 
-
-def test_cli(runner):
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert not result.exception
-    assert result.output.strip() == 'Hello, world.'
-
-
-def test_cli_with_option(runner):
-    result = runner.invoke(cli.main, ['--as-cowboy'])
+def test_cli_help(runner):
+    result = runner.invoke(cli.main, ['--help'])
     assert not result.exception
     assert result.exit_code == 0
-    assert result.output.strip() == 'Howdy, world.'
+    assert result.output.strip() == """Usage: lsd-cli [OPTIONS] [TENANT]
 
+  Leapsight Semantic Dataspace Command Line Tool
 
-def test_cli_with_arg(runner):
-    result = runner.invoke(cli.main, ['Federico'])
-    assert result.exit_code == 0
-    assert not result.exception
-    assert result.output.strip() == 'Hello, Federico.'
+Options:
+  -h, --host TEXT     LSD host.
+  -p, --port INTEGER  LSD port.
+  --help              Show this message and exit."""

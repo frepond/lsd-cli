@@ -71,7 +71,11 @@ def __cx(shell_ctx, prefix, uri):
     shell_ctx['prefix'][prefix] = uri
 
 
-def __lc(filename):
+def __lc(shell_ctx):
+    print_json_result(shell_ctx['prefix'])
+
+
+def __noc(shell_ctx):
     click.echo(colorize("Not implemented!", rgb=0xdd5a25))
 
 
@@ -87,7 +91,7 @@ __commands = {
     'cx': {'cmd': __cx, 'name': 'cx(prefix, uri)',
            'help': "Define a new url prefix to use during the shell session."},
     'lc': {'cmd': __lc, 'name': 'lc(filename)',
-           'help': "Loads url prefix to use during the shell session from filename."}
+           'help': "List url prefix definitions in the current shell session."}
 }
 
 

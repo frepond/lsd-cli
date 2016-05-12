@@ -38,7 +38,8 @@ def get_bottom_toolbar_tokens(cli):
             (Token.Toolbar, ' h() Help '),
             (Token.Toolbar, ' [F4] %s ' % text),
             (Token.Toolbar, ' [F5] %s ' % output),
-            (Token.Toolbar, ' (%0.3f ms, %d tuples) ' % (lsd.timer, lsd.tuples))]
+            (Token.Toolbar, ' (%0.2f ms/%0.2f ms, %d rows) '
+             % (lsd.cli_time, lsd.lsd_time, lsd.tuples))]
 
 
 def get_title():
@@ -118,10 +119,10 @@ Welcome to    _/         _/_/_/_/    _/_/_/
                         , rgb=0x2cb9d0))
 
     shell_ctx = {
-            'lsd_api': lsd_api,
-            'json_mode_enabled': json_mode_enabled,
-            'prefix': {}
-        }
+        'lsd_api': lsd_api,
+        'json_mode_enabled': json_mode_enabled,
+        'prefix': {}
+    }
 
     while True:
         cmd = prompt('lsd> ', history=history, auto_suggest=auto_suggest,

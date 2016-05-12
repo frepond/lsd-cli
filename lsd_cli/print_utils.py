@@ -36,12 +36,12 @@ def print_leaplog_result(result, json_mode=True):
         output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
-        title_context = underline("context")
-        context = highlight(json.dumps(result['@context'], indent=4),
-                            lexers.JsonLexer(), formatters.TerminalFormatter())
+        # title_context = underline("context")
+        # context = highlight(json.dumps(result['@context'], indent=4),
+        # lexers.JsonLexer(), formatters.TerminalFormatter())
         rows = __prepare_data(result['variables'], result['results'])
         tab = tabulate.tabulate(rows, headers=result['variables'])
-        output = "%(title_context)s\n%(context)s%(tab)s" % locals()
+        output = "%(tab)s" % locals()
 
     click.echo_via_pager(output)
 

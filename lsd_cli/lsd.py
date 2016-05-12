@@ -2,22 +2,31 @@ import time
 
 import requests
 
-timer = 0.0
+import json
+
+cli_time = 0.0
+lsd_time = 0.0
 tuples = 0
 
 
 def timing(f):
     def func_wrapper(*args, **kwargs):
-        global timer
+        global cli_time
+        global lsd_time
         global tuples
         time1 = time.time()
         ret = f(*args, **kwargs)
         time2 = time.time()
-        timer = ((time2 - time1) * 1000.0)
+        cli_time = ((time2 - time1) * 1000.0)
         try:
-            tuples = len(ret['results'])
+            lsd_time = ret['elapsed_time'] / 1000.0
+            tuples = ret['size']
         except:
-            tuples = len(ret)
+            lsd_time = 0.0
+            if ret:
+                tuples = len(ret)
+            else:
+                tuples = 0
 
         return ret
 
@@ -25,14 +34,18 @@ def timing(f):
 
 
 class Lsd:
+
     def __init__(self, tenant, host, port, content='application/leaplog-results+json'):
         self.__tenant = tenant
         self.__host = host
         self.__port = port
         self.__content = content
+        self.__session = requests.Session()
+        self.__session.trust_env = False
 
         # test lsd connection
-        self.leaplog('?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
+        self.leaplog(
+            '?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
 
     @timing
     def leaplog(self, query, basic_quorum='true', sloppy_quorum='true',
@@ -48,13 +61,14 @@ class Lsd:
         }
         headers = self.__headers()
 
-        r = requests.get(url, params=payload, headers=headers)
+        r = self.__session.get(url, params=payload, headers=headers)
         r.raise_for_status()
 
         if r.status_code == 204:
             result = None
         else:
-            result = r.json()
+            r.encoding = 'UTF-8'
+            result = json.loads(r.text)
 
         return result
 
@@ -67,9 +81,10 @@ class Lsd:
             'Accept-Encoding': 'gzip'
         }
 
-        r = requests.get(url, headers=headers)
+        r = self.__session.get(url, headers=headers)
         r.raise_for_status()
-        result = r.json()
+        r.encoding = 'UTF-8'
+        result = json.loads(r.text)
 
         return result
 
@@ -87,9 +102,10 @@ class Lsd:
             'source': source
         }
 
-        r = requests.post(url, json=ruleset, headers=headers)
+        r = self.__session.post(url, json=ruleset, headers=headers)
         r.raise_for_status()
-        result = r.json()
+        r.encoding = 'UTF-8'
+        result = json.loads(r.text)
 
         return result
 

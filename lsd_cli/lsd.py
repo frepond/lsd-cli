@@ -1,8 +1,8 @@
+import json
+import logging
 import time
 
 import requests
-
-import json
 
 cli_time = 0.0
 lsd_time = 0.0
@@ -48,21 +48,27 @@ class Lsd:
             '?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
 
     @timing
-    def leaplog(self, query, basic_quorum='true', sloppy_quorum='true',
-                r='quorum', pr='3', limit='infinity'):
+    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r='quorum', pr='3',
+                basic_quorum='true', sloppy_quorum='true', timeout=None, limit='infinity'):
         url = 'http://{0}:{1}/leaplog'.format(self.__host, self.__port)
         payload = {
             'query': query,
-            'basic_quorum': basic_quorum,
-            'sloppy_quorum': sloppy_quorum,
+            'program': program,
+            'ruleset': ruleset,
+            'prefix_mapping': prefix_mapping,
             'r': r,
             'pr': pr,
+            'basic_quorum': basic_quorum,
+            'sloppy_quorum': sloppy_quorum,
+            'timeout': timeout,
             'limit': limit
         }
+        payload = {k: v for k, v in payload.items() if v is not None}
         headers = self.__headers()
 
-        r = self.__session.get(url, params=payload, headers=headers)
-        r.raise_for_status()
+
+        r = self.__session.post(url, json=payload, headers=headers)
+        self.__check_error(r)
 
         if r.status_code == 204:
             result = None
@@ -82,7 +88,9 @@ class Lsd:
         }
 
         r = self.__session.get(url, headers=headers)
-        r.raise_for_status()
+
+        self.__check_error(r)
+
         r.encoding = 'UTF-8'
         result = json.loads(r.text)
 
@@ -103,7 +111,8 @@ class Lsd:
         }
 
         r = self.__session.post(url, json=ruleset, headers=headers)
-        r.raise_for_status()
+        self.__check_error(r)
+
         r.encoding = 'UTF-8'
         result = json.loads(r.text)
 
@@ -115,3 +124,9 @@ class Lsd:
             'Accept': self.__content,
             'Accept-Encoding': 'gzip'
         }
+
+    def __check_error(self, r):
+        try:
+            r.raise_for_status()
+        except:
+            raise Exception('Error: ' + r.text)

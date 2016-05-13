@@ -28,7 +28,7 @@ click.disable_unicode_literals_warning = True
 home = expanduser("~")
 history = FileHistory(home + '/.lsd-cli_history')
 auto_suggest = AutoSuggestFromHistory()
-debug = True
+
 
 re_cmd = re.compile(r'(\w+)\((.*)\)')
 re_llog = re.compile(r'^(\?|\+\+|\-\-)(.*.)')

@@ -102,7 +102,7 @@ def __process_input(shell_ctx, input):
 @click.command()
 @click.option('--host', '-h', default='localhost', help='LSD host.')
 @click.option('--port', '-p', default=10018, type=int, help='LSD port.')
-@click.option('--verbose', '-v', is_flag=True, help='Enable cli debug.')
+@click.option('--verbose', '-v', is_flag=True)
 @click.argument('tenant', default='leapsight', required=False)
 def main(tenant, host, port, verbose):
     """Leapsight Semantic Dataspace Command Line Tool"""

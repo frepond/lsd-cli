@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import re
+import traceback
 from os.path import expanduser
 
 import pkg_resources  # part of setuptools
@@ -9,7 +10,7 @@ import pkg_resources  # part of setuptools
 from lsd_cli import lsd
 from lsd_cli.lsd import Lsd
 from lsd_cli.print_utils import *
-from lsd_cli.shell_cmd import exec_cmd
+from lsd_cli.shell_cmd import process_input, _load_context
 from prompt_toolkit import prompt
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.contrib.completers import WordCompleter
@@ -27,12 +28,8 @@ json_mode_enabled = False
 click.disable_unicode_literals_warning = True
 home = expanduser("~")
 history = FileHistory(home + '/.lsd-cli_history')
+cli_rc = home + '/.lsdclirc'
 auto_suggest = AutoSuggestFromHistory()
-
-
-re_cmd = re.compile(r'(\w+)\((.*)\)')
-re_llog = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
-re_directive = re.compile(r'^(@prefix|@include)\s+(.*.)')
 
 
 def get_bottom_toolbar_tokens(cli):
@@ -57,48 +54,6 @@ style = style_from_dict({
 })
 
 
-def __process_input(shell_ctx, input):
-    cmd = None
-    args = []
-    match_llog = re_llog.match(input)
-    match_cmd = re_cmd.match(input)
-
-    if match_llog: # leaplog sentence (++ | -- | ?)
-        if match_llog.group(1) == '?':
-            cmd = 'select'
-            args = [input]
-        elif match_llog.group(1) == '++':
-            cmd = 'write_assert'
-            args = [input]
-        elif match_llog.group(1) == '--':
-            cmd = 'write_assert'
-            args = [input]
-        else:
-            raise Exception('Invalid leaplog sentence: {}'.format(input))
-    elif not match_cmd: # shell directive
-        match_dir = re_directive.match(input)
-
-        if match_dir: # prefix/include definition
-            logging.debug('+++ directive')
-            cmd = match_dir.group(1)
-            args = [match_dir.group(2)]
-        else: # rule
-           logging.debug('+++ rule')
-           cmd = 'rule'
-           args = [cmd]
-    else: # shell cmd
-        logging.debug('+++ shell cmd')
-        cmd = match_cmd.group(1)
-        params = match_cmd.group(2)
-
-        if params:
-            args = [x.strip() for x in params.split(',')]
-        else:
-            args = []
-
-    exec_cmd(shell_ctx, cmd, args)
-
-
 @click.command()
 @click.option('--host', '-h', default='localhost', help='LSD host.', show_default=True)
 @click.option('--port', '-p', default=10018, type=int, help='LSD port.', show_default=True)
@@ -109,9 +64,10 @@ def main(tenant, host, port, verbose):
     # Create a set of key bindings that have Vi mode enabled if the
     # ``vi_mode_enabled`` is True.
     if verbose:
-        format ='[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
+        format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
         logging.basicConfig(level=logging.DEBUG, format=format)
 
+    # try to connect to lsd
     try:
         lsd_api = Lsd(tenant, host, port)
     except Exception as e:
@@ -122,16 +78,16 @@ def main(tenant, host, port, verbose):
         exit(1)
 
     manager = KeyBindingManager.for_prompt(
-        enable_vi_mode = Condition(lambda cli: vi_mode_enabled))
+        enable_vi_mode=Condition(lambda cli: vi_mode_enabled))
 
-    # Add an additional key binding for toggling this flag.
+    # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F4)
     def _f4(_event):
         """ Toggle between Emacs and Vi mode. """
         global vi_mode_enabled
         vi_mode_enabled = not vi_mode_enabled
 
-    # Add an additional key binding for toggling this flag.
+    # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F5)
     def _f5(_event):
         """ Toggle between Json and Tabular mode. """
@@ -150,8 +106,8 @@ Welcome to    _/         _/_/_/_/    _/_/_/
 
     ll_completer = WordCompleter(
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
-        '?().', 'import(filename)', 'export(filename)', 'h()', 'e()'])
-    shell_ctx={
+         '?().', 'import(filename)', 'export(filename)', 'h()', 'e()'])
+    shell_ctx = {
         'lsd_api': lsd_api,
         'json_mode_enabled': json_mode_enabled,
         'prefix_mapping': {},
@@ -159,15 +115,21 @@ Welcome to    _/         _/_/_/_/    _/_/_/
         'includes': []
     }
 
+    # load init file ~/lsd-cli.rc
+    try:
+        _load_context(shell_ctx, cli_rc)
+    except:
+        pass
+
     while True:
         input = prompt('lsd> ', history=history, auto_suggest=auto_suggest,
-                     get_bottom_toolbar_tokens = get_bottom_toolbar_tokens,
-                     style = style, vi_mode = vi_mode_enabled,
-                     key_bindings_registry = manager.registry,
-                     get_title = get_title, completer = ll_completer)
+                       get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
+                       style=style, vi_mode=vi_mode_enabled,
+                       key_bindings_registry=manager.registry,
+                       get_title=get_title, completer=ll_completer)
         try:
             if input:
-                __process_input(shell_ctx, input.strip())
+                process_input(shell_ctx, input.strip())
         except Exception as e:
             click.echo(colorize(e, rgb=0xdd5a25))
-            logging.debug(e)
+            logging.debug(traceback.print_exc())

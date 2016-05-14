@@ -1,10 +1,62 @@
 import logging
+import os
 import re
+import sys
+import tempfile
+from subprocess import call
 
 from lsd_cli.print_utils import *
 from xtermcolor import colorize
 
+re_cmd = re.compile(r'(\w+)\((.*)\)')
+re_llog = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
+re_directive = re.compile(r'^(@prefix|@include)\s+(.*.)')
 re_prefix = re.compile(r'^\s*(\w+):\s*(\<.*\>).$')
+
+
+def process_input(shell_ctx, input):
+    cmd = None
+    args = []
+    match_llog = re_llog.match(input)
+    match_cmd = re_cmd.match(input)
+
+    if not input or input.startswith('%'):  # comment pass
+        logging.debug('+++ comment or empty')
+        return
+    elif match_llog:  # leaplog sentence (++ | -- | ?)
+        if match_llog.group(1) == '?':
+            cmd = 'select'
+            args = [input]
+        elif match_llog.group(1) == '++':
+            cmd = 'write_assert'
+            args = [input]
+        elif match_llog.group(1) == '--':
+            cmd = 'write_assert'
+            args = [input]
+        else:
+            raise Exception('Invalid leaplog sentence: {}'.format(input))
+    elif not match_cmd:  # shell directive
+        match_dir = re_directive.match(input)
+
+        if match_dir:  # prefix/include definition
+            logging.debug('+++ prefix directive')
+            cmd = match_dir.group(1)
+            args = [match_dir.group(2)]
+        else:  # rule
+            logging.debug('+++ rule directive')
+            cmd = 'rule'
+            args = [cmd]
+    else:  # shell cmd
+        logging.debug('+++ shell cmd')
+        cmd = match_cmd.group(1)
+        params = match_cmd.group(2)
+
+        if params:
+            args = [x.strip() for x in params.split(',')]
+        else:
+            args = []
+
+    __dispatch_cmd(shell_ctx, cmd, args)
 
 
 def __exec_leaplog(shell_ctx, filename):
@@ -98,18 +150,72 @@ def __prefix(shell_ctx, params):
 
 
 def __include(shell_ctx, params):
-   shell_ctx['includes'].append('@include: {}'.format(params))
-   logging.debug(shell_ctx['includes'])
+    shell_ctx['includes'].append('@include: {}'.format(params))
+    logging.debug(shell_ctx['includes'])
 
 
 def __import(shell_ctx, params):
     # TODO: imlement
-    click.echo(colorize("import(): Not implemented!", rgb=0xdd5a25))
+    _load_context(shell_ctx, params)
 
 
 def __export(shell_ctx, params):
-    # TODO: imlement
-    click.echo(colorize("export(): Not implemented!", rgb=0xdd5a25))
+    context = __dump_conext(shell_ctx)
+
+    with open(params, 'w') as file:
+        file.write(context)
+
+
+def __dump_conext(shell_ctx):
+    prefixes = ''
+    for prefix, uri in shell_ctx['prefix_mapping'].items():
+        prefixes = prefixes + '@prefix {}: {}.\n'.format(prefix, uri)
+
+    includes = ''
+    for include in shell_ctx['includes']:
+        includes = includes + '\n' + include
+
+    rules = ''
+    for rule in shell_ctx['rules']:
+        rules = rules + '\n' + rule
+
+    comment = '% This file is imported one line at a time. Do not split lines!\n'
+    context = '%(prefixes)s%(includes)s%(rules)s' % locals()
+
+    return comment + context
+
+
+def _load_context(shell_ctx, filename):
+    with open(filename, 'r') as file:
+        lineno = 0
+
+        for line in file:
+            lineno += 1
+
+            try:
+                logging.debug('Importing line: "%s"', line)
+                process_input(shell_ctx, line.strip())
+            except Exception as e:
+                logging.error(e)
+                logging.error('Importing line: "%s"', line)
+
+
+
+def __edit(shell_ctx):
+    EDITOR = os.environ.get('EDITOR', 'vim')  # that easy!
+
+    with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
+        tf.write(bytes(__dump_conext(shell_ctx), 'UTF-8'))
+        tf.flush()
+        call([EDITOR, tf.name])
+
+        # clear current shell context
+        shell_ctx['prefix_mapping'] = {}
+        shell_ctx['includes'] = []
+        shell_ctx['rules'] = []
+
+        # load new context
+        _load_context(shell_ctx, tf.name)
 
 
 def __select(shell_ctx, params):
@@ -168,21 +274,21 @@ __commands = {
                       'help': 'Write an retract on lsd.'},
     'rule': {'cmd': __rule, 'name': '().',
              'help': 'Partial rule definition for the current shell session.'},
-    'export': {'cmd': __export, 'name': '@export <filename>.',
-               'help': "Export the current shell session to <filename>."},
     '@prefix': {'cmd': __prefix, 'name': '@prefix prefix: <uri>.',
                 'help': "Define a new url prefix to use during the shell session."},
     '@include': {'cmd': __include, 'name': '@include <uri>.',
                  'help': "Use the given ruleset during the shell session."},
-    'import': {'cmd': __import, 'name': '@import <filename>.',
+    'import': {'cmd': __import, 'name': 'import(filename>)',
                'help': "Import the given <filename> to the shell session."},
-    'export': {'cmd': __export, 'name': '@export <filename>.',
+    'export': {'cmd': __export, 'name': 'export(filename>)',
                'help': "Export the current shell session to <filename>."},
+    'edit': {'cmd': __edit, 'name': 'edit(filename)',
+             'help': "Export the current shell session to <filename>."},
     'lc': {'cmd': __lc, 'name': 'lc(filename)',
            'help': "List url prefix definitions in the current shell session."}
 }
 
 
-def exec_cmd(shell_ctx, cmd, args):
+def __dispatch_cmd(shell_ctx, cmd, args):
     logging.debug('%s: %s', cmd, args)
     __commands[cmd]['cmd'](shell_ctx, *args)

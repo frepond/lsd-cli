@@ -133,7 +133,7 @@ def __lc(shell_ctx):
 
 def __e(shell_ctx):
     # TODO: imlement
-    click.echo(colorize("e(): Not implemented!", rgb=0xdd5a25))
+    click.echo(colorize("e(): Not implemented!", rgb=0xE11500))
 
 
 def __prefix(shell_ctx, params):
@@ -152,6 +152,11 @@ def __prefix(shell_ctx, params):
 def __include(shell_ctx, params):
     shell_ctx['includes'].append('@include: {}'.format(params))
     logging.debug(shell_ctx['includes'])
+
+
+def __rule(shell_ctx, params):
+    shell_ctx['rules'].append(params)
+    logging.debug(shell_ctx['rules'])
 
 
 def __import(shell_ctx, params):
@@ -200,7 +205,6 @@ def _load_context(shell_ctx, filename):
                 logging.error('Importing line: "%s"', line)
 
 
-
 def __edit(shell_ctx):
     EDITOR = os.environ.get('EDITOR', 'vim')  # that easy!
 
@@ -247,13 +251,8 @@ def __write_retract(shell_ctx, params):
     __write(shell_ctx, params)
 
 
-def __rule(shell_ctx, params):
-    # TODO: imlement
-    click.echo(colorize("rule: Not implemented!", rgb=0xdd5a25))
-
-
 def __noc(shell_ctx):
-    click.echo(colorize("Not implemented!", rgb=0xdd5a25))
+    click.echo(colorize("Not implemented!", rgb=0xE11500))
 
 
 # shell commands dispatch table

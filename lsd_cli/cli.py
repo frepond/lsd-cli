@@ -23,18 +23,24 @@ from prompt_toolkit.token import Token
 from xtermcolor import colorize
 
 version = pkg_resources.require("lsd-cli")[0].version
-vi_mode_enabled = False
-json_mode_enabled = False
 click.disable_unicode_literals_warning = True
 home = expanduser("~")
 history = FileHistory(home + '/.lsd-cli_history')
 cli_rc = home + '/.lsdclirc'
 auto_suggest = AutoSuggestFromHistory()
+shell_ctx = {
+        'lsd_api': None,
+        'json_mode_enabled': False,
+        'vi_mode_enabled': True,
+        'prefix_mapping': {},
+        'rules': [],
+        'includes': []
+    }
 
 
 def get_bottom_toolbar_tokens(cli):
-    text = 'Vi' if vi_mode_enabled else 'Emacs'
-    output = "Json" if json_mode_enabled else 'Tabular'
+    text = 'Vi' if shell_ctx['vi_mode_enabled'] else 'Emacs'
+    output = "Json" if shell_ctx['json_mode_enabled'] else 'Tabular'
 
     return [(Token.Toolbar, ' lsd-cli v{0}. '.format(version)),
             (Token.Toolbar, ' h() Help '),
@@ -69,30 +75,28 @@ def main(tenant, host, port, verbose):
 
     # try to connect to lsd
     try:
-        lsd_api = Lsd(tenant, host, port)
+        shell_ctx['lsd_api'] = Lsd(tenant, host, port)
     except Exception as e:
-        click.echo('ERROR: connection refused {0}:{1}({2})'.format(
-            host, port, tenant))
+        click.echo(colorize('ERROR: connection refused {0}:{1}({2})'.format(
+            host, port, tenant), rgb=0xE11500))
         logging.debug(e)
 
         exit(1)
 
     manager = KeyBindingManager.for_prompt(
-        enable_vi_mode=Condition(lambda cli: vi_mode_enabled))
+        enable_vi_mode=Condition(lambda cli: shell_ctx['vi_mode_enabled']))
 
     # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F4)
     def _f4(_event):
         """ Toggle between Emacs and Vi mode. """
-        global vi_mode_enabled
-        vi_mode_enabled = not vi_mode_enabled
+        shell_ctx['vi_mode_enabled'] = not shell_ctx['vi_mode_enabled']
 
     # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F5)
     def _f5(_event):
         """ Toggle between Json and Tabular mode. """
-        global json_mode_enabled
-        json_mode_enabled = not json_mode_enabled
+        shell_ctx['json_mode_enabled'] = not shell_ctx['json_mode_enabled']
 
     click.clear()
     click.echo(colorize("""
@@ -107,13 +111,6 @@ Welcome to    _/         _/_/_/_/    _/_/_/
     ll_completer = WordCompleter(
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
          '?().', 'import(filename)', 'export(filename)', 'h()', 'e()'])
-    shell_ctx = {
-        'lsd_api': lsd_api,
-        'json_mode_enabled': json_mode_enabled,
-        'prefix_mapping': {},
-        'rules': [],
-        'includes': []
-    }
 
     # load init file ~/lsd-cli.rc
     try:
@@ -124,12 +121,12 @@ Welcome to    _/         _/_/_/_/    _/_/_/
     while True:
         input = prompt('lsd> ', history=history, auto_suggest=auto_suggest,
                        get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
-                       style=style, vi_mode=vi_mode_enabled,
+                       style=style, vi_mode=shell_ctx['vi_mode_enabled'],
                        key_bindings_registry=manager.registry,
                        get_title=get_title, completer=ll_completer)
         try:
             if input:
                 process_input(shell_ctx, input.strip())
         except Exception as e:
-            click.echo(colorize(e, rgb=0xdd5a25))
+            click.echo(colorize(e, rgb=0xE11500))
             logging.debug(traceback.print_exc())

@@ -8,7 +8,7 @@ from subprocess import call
 from lsd_cli.print_utils import *
 from xtermcolor import colorize
 
-re_cmd = re.compile(r'(\w+)\((.*)\)')
+re_cmd = re.compile(r'(\w+)\((.*)\)$')
 re_llog = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
 re_directive = re.compile(r'^(@prefix|@include)\s+(.*.)')
 re_prefix = re.compile(r'^\s*(\w+):\s*(\<.*\>).$')

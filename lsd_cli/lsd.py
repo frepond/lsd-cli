@@ -63,9 +63,10 @@ class Lsd:
             'timeout': timeout,
             'limit': limit
         }
-        payload = {k: v for k, v in payload.items() if v is not None}
+        payload = {k: v for k, v in payload.items() if v}
         headers = self.__headers()
 
+        logging.debug('leaplog payload: %s', payload)
 
         r = self.__session.post(url, json=payload, headers=headers)
         self.__check_error(r)

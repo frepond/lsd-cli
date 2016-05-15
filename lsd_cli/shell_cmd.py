@@ -45,7 +45,7 @@ def process_input(shell_ctx, input):
         else:  # rule
             logging.debug('+++ rule directive')
             cmd = 'rule'
-            args = [cmd]
+            args = [input]
     else:  # shell cmd
         logging.debug('+++ shell cmd')
         cmd = match_cmd.group(1)
@@ -171,21 +171,21 @@ def __export(shell_ctx, params):
         file.write(context)
 
 
+def __dump_ruleset(shell_ctx):
+    includes = '\n'.join(shell_ctx['includes'])
+    rules = '\n'.join(shell_ctx['rules'])
+
+    return includes + rules
+
 def __dump_conext(shell_ctx):
     prefixes = ''
     for prefix, uri in shell_ctx['prefix_mapping'].items():
         prefixes = prefixes + '@prefix {}: {}.\n'.format(prefix, uri)
 
-    includes = ''
-    for include in shell_ctx['includes']:
-        includes = includes + '\n' + include
-
-    rules = ''
-    for rule in shell_ctx['rules']:
-        rules = rules + '\n' + rule
+    ruleset = __dump_ruleset(shell_ctx)
 
     comment = '% This file is imported one line at a time. Do not split lines!\n'
-    context = '%(prefixes)s%(includes)s%(rules)s' % locals()
+    context = '%(prefixes)s%(ruleset)s' % locals()
 
     return comment + context
 
@@ -224,8 +224,7 @@ def __edit(shell_ctx):
 
 def __select(shell_ctx, params):
     prefix_mapping = shell_ctx['prefix_mapping']
-    # TODO build rulset from shell_ctx['includes'] and shell_ctx['rules']
-    ruleset = None
+    ruleset = __dump_ruleset(shell_ctx)
     prog = '%(params)s' % locals()
     result = shell_ctx['lsd_api'].leaplog(
         prog, prefix_mapping=prefix_mapping, ruleset=ruleset)

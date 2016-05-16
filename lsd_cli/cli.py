@@ -80,7 +80,7 @@ def main(tenant, host, port, verbose):
     except Exception as e:
         click.echo(colorize('ERROR: connection refused {0}:{1}({2})'.format(
             host, port, tenant), rgb=0xE11500))
-        logging.debug(e)
+        logging.exception(e)
 
         exit(1)
 

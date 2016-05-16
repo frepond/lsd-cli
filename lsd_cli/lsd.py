@@ -1,9 +1,10 @@
-import socket
 import logging
+import socket
+import struct
+import sys
 import time
 
 from bert import *
-
 
 cli_time = 0.0
 lsd_time = 0.0
@@ -40,56 +41,71 @@ class Lsd:
         self.__tenant = tenant
         self.__host = host
         self.__port = port
-        self.__conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.__conn.connect((host, port))
+        self.__connect()
+        self.__credentials = self.__get_credentials()
 
     @timing
-    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r='quorum', pr='3',
-                basic_quorum='true', sloppy_quorum='true', timeout='infinity', limit='infinity'):
+    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r=Atom('quorum'), pr=3,
+                basic_quorum=True, sloppy_quorum=True, timeout=Atom('infinity'), limit=Atom('infinity')):
         func = Atom('evaluate')
-        op = (func, [query, ruleset],
-              [('r', r), ('pr', pr), ('basic_quorum', basic_quorum),
-               ('sloppy_quorum', sloppy_quorum), ('limit', limit)])
-        enc_op = encode(op)
+        params = [self.__credentials, query, [],
+                  [(Atom('r'), r), (Atom('pr'), pr), (Atom('basic_quorum'), basic_quorum),
+                   (Atom('sloppy_quorum'), sloppy_quorum), (Atom('limit'), limit),
+                   (Atom('timeout'), timeout)]]
+        result = self.__bert_call(func, params)
 
+        logging.debug('leaplog result: %s', result)
+
+        return result
+
+    def __connect(self):
+        self.__conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.__conn.connect((self.__host, self.__port))
+
+    def __get_credentials(self):
+        func = Atom('new')
+        params = [(Atom('lsd_credentials'), 'leapsight', [], []), []]
+        result = self.__bert_call(func, params)
+
+        logging.debug('credentials: %s', result)
+
+        return result
+
+    def __bert_call(self, operation, params):
+        operation = (Atom(operation), params)
+        enc_op = encode(operation)
+
+        self.__conn.sendall(struct.pack(">l", len(enc_op)))
         self.__conn.sendall(enc_op)
-        received = self.__recv_timeout()
-        logging.debug(received)
+        received = self.__recv()
 
         return decode(received)
 
-    def __recv_timeout(self, timeout=2):
-        #make socket non blocking
-        self.__conn.setblocking(0)
+    def __recv(self):
+        # data length is packed into 4 bytes
+        total_len = 0
+        total_data = []
+        size = sys.maxsize
+        size_data = sock_data = b''
+        recv_size = 8192
 
-        #total data partwise in an array
-        total_data=[];
-        data='';
+        while total_len < size:
+            sock_data = self.__conn.recv(recv_size)
 
-        #beginning time
-        begin=time.time()
-        while 1:
-            #if you got some data, then break after timeout
-            if total_data and time.time()-begin > timeout:
-                break
-
-            #if you got no data at all, wait a little longer, twice the timeout
-            elif time.time()-begin > timeout*2:
-                break
-
-            #recv something
-            try:
-                data = self.__conn.recv(8192)
-                if data:
-                    total_data.append(data)
-                    #change the beginning time for measurement
-                    begin=time.time()
+            if not total_data:
+                if len(sock_data) > 4:
+                    size_data += sock_data
+                    size = struct.unpack('>l', size_data[:4])[0]
+                    recv_size = size
+                    if recv_size > 524288:
+                        recv_size = 524288
+                    total_data.append(size_data[4:])
                 else:
-                    #sleep for sometime to indicate a gap
-                    time.sleep(0.1)
-            except:
-                pass
+                    size_data += sock_data
+            else:
+                total_data.append(sock_data)
 
-        #join all parts to make final string
-        return ''.join(total_data)
+            total_len = sum([len(i) for i in total_data])
+
+        return b''.join(total_data)

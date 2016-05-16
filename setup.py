@@ -3,7 +3,8 @@ Leapsight Semantic Dataspace Command Line Tool
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click', 'prompt-toolkit', 'requests', 'pygments', 'tabulate', 'xtermcolor', 'bert']
+dependencies = ['click', 'prompt-toolkit', 'requests', 'pygments', 'tabulate',
+                'xtermcolor', 'bert']
 
 setup(
     name='lsd-cli',

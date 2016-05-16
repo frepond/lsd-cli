@@ -18,23 +18,23 @@ def __format_value(shell_ctx, value):
             return value
     else:
         if value.get('@id', None):
-            return colorize('<{0}>'.format(underline(value['@id'])), rgb=0x66D9EF)
+            return colorize('<{0}>'.format(underline(value['@id'])), ansi=38)
         elif value.get('@value', None) is not None:
             ltype = value.get('@type', None)
 
             if not ltype:
-                return colorize(value['@value'], rgb=0xA6E22E)
+                return colorize(value['@value'], ansi=118)
             else:
                 stype = ltype[32:]
 
                 if stype == '#integer':
-                    return colorize(value['@value'], rgb=0xF92672)
+                    return colorize(value['@value'], ansi=197)
                 elif stype == '#float':
-                    return colorize(value['@value'], rgb=0xF92672)
+                    return colorize(value['@value'], ansi=197)
                 elif stype == '#dateTime':
-                    return colorize(value['@value'], rgb=0xFD971F)
+                    return colorize(value['@value'], ansi=208)
                 elif stype == '#boolean':
-                    return colorize(value['@value'], rgb=0xF92672)
+                    return colorize(value['@value'], ansi=197)
                 else:
                     return value['@value']
         else:

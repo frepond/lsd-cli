@@ -34,7 +34,8 @@ shell_ctx = {
         'vi_mode_enabled': True,
         'prefix_mapping': {},
         'rules': [],
-        'includes': []
+        'includes': [],
+        'progress': ' [#         ] '
     }
 
 
@@ -47,7 +48,8 @@ def get_bottom_toolbar_tokens(cli):
             (Token.Toolbar, ' [F4] %s ' % text),
             (Token.Toolbar, ' [F5] %s ' % output),
             (Token.Toolbar, ' (%0.2f ms/%0.2f ms, %d rows) '
-             % (lsd.cli_time, lsd.lsd_time, lsd.tuples))]
+             % (lsd.cli_time, lsd.lsd_time, lsd.tuples)),
+            (Token.Toolbar, shell_ctx['status'])]
 
 
 def get_title():

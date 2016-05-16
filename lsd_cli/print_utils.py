@@ -8,22 +8,25 @@ import tabulate
 from xtermcolor import colorize
 
 
-def __format_value(v):
-    if (v.get('@id', None)):
-        return colorize('<{0}>'.format(underline(v['@id'])), rgb=0x66D9EF)
-    elif (v.get('@value', None) is not None):
-        type = v.get('@type', None)
+def __format_value(value):
+    if value.get('@id', None):
+        return colorize('<{0}>'.format(underline(value['@id'])), rgb=0x66D9EF)
+    elif value.get('@value', None) is not None:
+        ltype = value.get('@type', None)
 
-        if type == 'http://www.w3.org/2001/XMLSchema#integer':
-            return colorize(v['@value'], rgb=0xF92672)
-        elif type == 'http://www.w3.org/2001/XMLSchema#float':
-            return colorize(v['@value'], rgb=0xF92672)
-        elif type == 'http://www.w3.org/2001/XMLSchema#dateTime':
-            return colorize(v['@value'], rgb=0xFD971F)
+        if not ltype:
+            return colorize(value['@value'], rgb=0xA6E22E)
         else:
-            return colorize(v['@value'], rgb=0xA6E22E)
+            stype = ltype[32:]
+
+            if stype == '#integer':
+                return colorize(value['@value'], rgb=0xF92672)
+            elif stype == '#float':
+                return colorize(value['@value'], rgb=0xF92672)
+            elif stype == '#dateTime':
+                return colorize(value['@value'], rgb=0xFD971F)
     else:
-        return v
+        return value
 
 
 def __prepare_data(variables, results):

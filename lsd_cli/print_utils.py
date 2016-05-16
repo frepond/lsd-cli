@@ -18,7 +18,7 @@ def __format_value(shell_ctx, value):
             return value
     else:
         if value.get('@id', None):
-            return colorize('<{0}>'.format(underline(value['@id'])), ansi=38)
+            return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
         elif value.get('@value', None) is not None:
             ltype = value.get('@type', None)
 

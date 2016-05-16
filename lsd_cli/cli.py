@@ -62,7 +62,7 @@ style = style_from_dict({
 
 @click.command()
 @click.option('--host', '-h', default='localhost', help='LSD host.', show_default=True)
-@click.option('--port', '-p', default=10018, type=int, help='LSD port.', show_default=True)
+@click.option('--port', '-p', default=10016, type=int, help='LSD port.', show_default=True)
 @click.option('--verbose', '-v', is_flag=True)
 @click.argument('tenant', default='leapsight', required=False)
 def main(tenant, host, port, verbose):

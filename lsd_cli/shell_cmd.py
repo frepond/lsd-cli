@@ -232,11 +232,11 @@ def __select(shell_ctx, params):
 
 
 def __write(shell_ctx, params):
-    prefix_dirs = __prefix_dirs(shell_ctx)
+    prefix_dirs = __dump_conext(shell_ctx)
     prog = '%(prefix_dirs)s\n\n%(params)s' % locals()
     result = shell_ctx['lsd_api'].leaplog(prog)
 
-    print_json_result(shell_ctx, result)
+    print_leaplog_result(shell_ctx, result)
 
 
 def __write_assert(shell_ctx, params):

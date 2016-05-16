@@ -8,32 +8,47 @@ import tabulate
 from xtermcolor import colorize
 
 
-def __format_value(v):
-    if (v.get('@id', None)):
-        return colorize('<{0}>'.format(underline(v['@id'])), rgb=0x66D9EF)
-    elif (v.get('@value', None) is not None):
-        type = v.get('@type', None)
-
-        if type == 'http://www.w3.org/2001/XMLSchema#integer':
-            return colorize(v['@value'], rgb=0xF92672)
-        elif type == 'http://www.w3.org/2001/XMLSchema#float':
-            return colorize(v['@value'], rgb=0xF92672)
-        elif type == 'http://www.w3.org/2001/XMLSchema#dateTime':
-            return colorize(v['@value'], rgb=0xFD971F)
+def __format_value(shell_ctx, value):
+    if not shell_ctx['pretty_print']:
+        if value.get('@id', None):
+            return '<{0}>'.format(underline(value['@id']))
+        elif value.get('@value', None) is not None:
+            return value['@value']
         else:
-            return colorize(v['@value'], rgb=0xA6E22E)
+            return value
     else:
-        return v
+        if value.get('@id', None):
+            return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
+        elif value.get('@value', None) is not None:
+            ltype = value.get('@type', None)
+
+            if not ltype:
+                return colorize(value['@value'], ansi=118)
+            else:
+                stype = ltype[32:]
+
+                if stype == '#integer':
+                    return colorize(value['@value'], ansi=197)
+                elif stype == '#float':
+                    return colorize(value['@value'], ansi=197)
+                elif stype == '#dateTime':
+                    return colorize(value['@value'], ansi=208)
+                elif stype == '#boolean':
+                    return colorize(value['@value'], ansi=197)
+                else:
+                    return value['@value']
+        else:
+            return value
 
 
-def __prepare_data(variables, results):
+def __prepare_data(shell_ctx, variables, results):
     rows = []
 
     for item in results:
         row = []
 
         for k in variables:
-            value = __format_value(item[k])
+            value = __format_value(shell_ctx, item[k])
             row.append(value)
 
         rows.append(row)
@@ -41,10 +56,10 @@ def __prepare_data(variables, results):
     return rows
 
 
-def print_leaplog_result(result, json_mode=True):
+def print_leaplog_result(shell_ctx, result):
     if not result:
         output = 'No results.'
-    elif json_mode:
+    elif shell_ctx['json_mode_enabled']:
         output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
     else:
@@ -52,7 +67,8 @@ def print_leaplog_result(result, json_mode=True):
         # context = highlight(json.dumps(result['@context'], indent=4),
         # lexers.JsonLexer(), formatters.TerminalFormatter())
         logging.debug(result)
-        rows = __prepare_data(result['variables'], result['results'])
+        rows = __prepare_data(
+            shell_ctx, result['variables'], result['results'])
         tab = tabulate.tabulate(rows, headers=result['variables'])
         output = "%(tab)s" % locals()
 
@@ -63,10 +79,10 @@ def __is_list(obj):
     return hasattr(obj, '__iter__') and not isinstance(obj, str) and not isinstance(obj, dict)
 
 
-def print_json_result(result, json_mode=True):
+def print_json_result(shell_ctx, result):
     if not result:
         output = 'No results.'
-    elif json_mode:
+    elif shell_ctx['json_mode_enabled']:
         output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
     else:

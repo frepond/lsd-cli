@@ -8,17 +8,17 @@ from subprocess import call
 from lsd_cli.print_utils import *
 from xtermcolor import colorize
 
-re_cmd = re.compile(r'(\w+)\((.*)\)')
-re_llog = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
-re_directive = re.compile(r'^(@prefix|@include)\s+(.*.)')
-re_prefix = re.compile(r'^\s*(\w+):\s*(\<.*\>).$')
+RE_CMD = re.compile(r'(\w+)\((.*)\)$')
+RE_LLOG = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
+RE_DIRECTIVE = re.compile(r'^(@prefix|@include)\s+(.*.)')
+RE_PREFIX = re.compile(r'^\s*(\w+):\s*(\<.*\>).$')
 
 
 def process_input(shell_ctx, input):
     cmd = None
     args = []
-    match_llog = re_llog.match(input)
-    match_cmd = re_cmd.match(input)
+    match_llog = RE_LLOG.match(input)
+    match_cmd = RE_CMD.match(input)
 
     if not input or input.startswith('%'):  # comment pass
         logging.debug('+++ comment or empty')
@@ -36,7 +36,7 @@ def process_input(shell_ctx, input):
         else:
             raise Exception('Invalid leaplog sentence: {}'.format(input))
     elif not match_cmd:  # shell directive
-        match_dir = re_directive.match(input)
+        match_dir = RE_DIRECTIVE.match(input)
 
         if match_dir:  # prefix/include definition
             logging.debug('+++ prefix directive')
@@ -45,7 +45,7 @@ def process_input(shell_ctx, input):
         else:  # rule
             logging.debug('+++ rule directive')
             cmd = 'rule'
-            args = [cmd]
+            args = [input]
     else:  # shell cmd
         logging.debug('+++ shell cmd')
         cmd = match_cmd.group(1)
@@ -60,7 +60,7 @@ def process_input(shell_ctx, input):
 
 
 def __exec_leaplog(shell_ctx, filename):
-    json_mode_enabled = shell_ctx['json_mode_enabled']
+    shell_ctx['progress'] = ' [#         ] '
     lsd_api = shell_ctx['lsd_api']
 
     try:
@@ -70,11 +70,10 @@ def __exec_leaplog(shell_ctx, filename):
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.leaplog(content)
-    print_leaplog_result(result, json_mode_enabled)
+    print_leaplog_result(shell_ctx, result)
 
 
 def __exec_ruleset(shell_ctx, uri, filename):
-    json_mode_enabled = shell_ctx['json_mode_enabled']
     lsd_api = shell_ctx['lsd_api']
 
     try:
@@ -85,7 +84,7 @@ def __exec_ruleset(shell_ctx, uri, filename):
 
     result = lsd_api.create_ruleset(uri, ruleset)
     click.echo(result)
-    print_json_result(result, json_mode_enabled)
+    print_json_result(shell_ctx, result)
 
 
 def __h(_):
@@ -98,11 +97,11 @@ The following are the list of built-in command and leaplog sentences
 getting to lsd. Shell context is used on selects (?), write assert (++) and
 write detract (--).\n\n""")
 
-    for k, v in __commands.items():
-        shell_help.append(colorize(v['name'], rgb=0x71d1df))
+    for _, value in __commands.items():
+        shell_help.append(colorize(value['name'], rgb=0x71d1df))
         shell_help.append('\n')
         shell_help.append('  ')
-        shell_help.append(v['help'])
+        shell_help.append(value['help'])
         shell_help.append('\n\n')
 
     click.echo_via_pager(''.join(shell_help))
@@ -124,7 +123,7 @@ def __lr(shell_ctx):
     json_mode_enabled = shell_ctx['json_mode_enabled']
     lsd_api = shell_ctx['lsd_api']
     result = lsd_api.rulesets()
-    print_json_result(result, json_mode_enabled)
+    print_json_result(shell_ctx, result)
 
 
 def __lc(shell_ctx):
@@ -137,7 +136,7 @@ def __e(shell_ctx):
 
 
 def __prefix(shell_ctx, params):
-    match = re_prefix.match(params)
+    match = RE_PREFIX.match(params)
 
     if not match:
         raise Exception(
@@ -160,7 +159,6 @@ def __rule(shell_ctx, params):
 
 
 def __import(shell_ctx, params):
-    # TODO: imlement
     _load_context(shell_ctx, params)
 
 
@@ -171,21 +169,21 @@ def __export(shell_ctx, params):
         file.write(context)
 
 
+def __dump_ruleset(shell_ctx):
+    includes = '\n'.join(shell_ctx['includes'])
+    rules = '\n'.join(shell_ctx['rules'])
+
+    return includes + rules
+
 def __dump_conext(shell_ctx):
     prefixes = ''
     for prefix, uri in shell_ctx['prefix_mapping'].items():
         prefixes = prefixes + '@prefix {}: {}.\n'.format(prefix, uri)
 
-    includes = ''
-    for include in shell_ctx['includes']:
-        includes = includes + '\n' + include
-
-    rules = ''
-    for rule in shell_ctx['rules']:
-        rules = rules + '\n' + rule
+    ruleset = __dump_ruleset(shell_ctx)
 
     comment = '% This file is imported one line at a time. Do not split lines!\n'
-    context = '%(prefixes)s%(includes)s%(rules)s' % locals()
+    context = '%(prefixes)s%(ruleset)s' % locals()
 
     return comment + context
 
@@ -206,12 +204,12 @@ def _load_context(shell_ctx, filename):
 
 
 def __edit(shell_ctx):
-    EDITOR = os.environ.get('EDITOR', 'vim')  # that easy!
+    editor = os.environ.get('EDITOR', 'vim')
 
     with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
         tf.write(bytes(__dump_conext(shell_ctx), 'UTF-8'))
         tf.flush()
-        call([EDITOR, tf.name])
+        call([editor, tf.name])
 
         # clear current shell context
         shell_ctx['prefix_mapping'] = {}
@@ -224,23 +222,21 @@ def __edit(shell_ctx):
 
 def __select(shell_ctx, params):
     prefix_mapping = shell_ctx['prefix_mapping']
-    # TODO build rulset from shell_ctx['includes'] and shell_ctx['rules']
-    ruleset = None
+    ruleset = __dump_ruleset(shell_ctx)
     prog = '%(params)s' % locals()
     result = shell_ctx['lsd_api'].leaplog(
         prog, prefix_mapping=prefix_mapping, ruleset=ruleset)
-    json_mode_enabled = shell_ctx['json_mode_enabled']
+    shell_ctx['progress'] = ' [#         ] '
 
-    print_leaplog_result(result, json_mode_enabled)
+    print_leaplog_result(shell_ctx, result)
 
 
 def __write(shell_ctx, params):
     prefix_dirs = __prefix_dirs(shell_ctx)
     prog = '%(prefix_dirs)s\n\n%(params)s' % locals()
     result = shell_ctx['lsd_api'].leaplog(prog)
-    json_mode_enabled = shell_ctx['json_mode_enabled']
 
-    print_json_result(result, json_mode_enabled)
+    print_json_result(shell_ctx, result)
 
 
 def __write_assert(shell_ctx, params):
@@ -259,7 +255,7 @@ def __noc(shell_ctx):
 __commands = {
     'h': {'cmd': __h, 'name': 'h()', 'help': 'Prints this help.'},
     'c': {'cmd': __c, 'name': 'c()', 'help': 'Clears the terminal.'},
-    'e': {'cmd': __e, 'name': 'e()', 'help': 'Edits current shell contex.'},
+    'edit': {'cmd': __e, 'name': 'edit()', 'help': 'Edits current shell contex.'},
     'll': {'cmd': __ll, 'name': 'll(filename)',
            'help': 'Loads an execute a leaplog program from filename.'},
     'rs': {'cmd': __rs, 'name': 'rs(uri, filename)',

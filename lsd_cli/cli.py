@@ -7,8 +7,6 @@ from os.path import expanduser
 import pkg_resources  # part of setuptools
 
 import click
-from lsd_cli import lsd
-from lsd_cli.lsd import Lsd
 from lsd_cli.print_utils import *
 from lsd_cli.shell_cmd import _load_context, process_input
 from prompt_toolkit import prompt
@@ -47,14 +45,15 @@ def get_bottom_toolbar_tokens(cli):
     text = 'Vi' if SHELL_CTX['vi_mode_enabled'] else 'Emacs'
     output = 'Json' if SHELL_CTX['json_mode_enabled'] else 'Tabular'
     pretty = 'Pretty-ON' if SHELL_CTX['pretty_print'] else 'Pretty-OFF'
+    lsd_module = SHELL_CTX['protocol']
 
     return [(Token.Toolbar, ' lsd-cli v{0}. '.format(VERSION)),
             (Token.Toolbar, ' h() Help '),
             (Token.Toolbar, ' [F4] %s ' % text),
             (Token.Toolbar, ' [F5] %s ' % output),
             (Token.Toolbar, ' [F6] %s ' % pretty),
-            (Token.Toolbar, ' (%0.2f ms/%0.2f ms, %d rows) '
-             % (lsd.cli_time, lsd.lsd_time, lsd.tuples))]
+            (Token.Toolbar, ' (%0.2fms/%0.2fms, %d rows) '
+             % (lsd_module.cli_time, lsd_module.lsd_time, lsd_module.tuples))]
 
 
 def get_title():
@@ -63,19 +62,30 @@ def get_title():
 
 @click.command()
 @click.option('--host', '-h', default='localhost', help='LSD host.', show_default=True)
-@click.option('--port', '-p', default=10016, type=int, help='LSD port.', show_default=True)
+@click.option('--port', '-p', default=10018, type=int, help='LSD port.', show_default=True)
 @click.option('--verbose', '-v', is_flag=True)
+@click.option('--bert', '-b', is_flag=True)
 @click.argument('tenant', default='leapsight', required=False)
-def main(tenant, host, port, verbose):
+def main(tenant, host, port, bert, verbose):
     """Leapsight Semantic Dataspace Command Line Tool"""
     # Create a set of key bindings that have Vi mode enabled if the
     # ``vi_mode_enabled`` is True.
     if verbose:
-        format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
-        logging.basicConfig(level=logging.DEBUG, format=format)
+        format_str = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
+        logging.basicConfig(level=logging.DEBUG, format=format_str)
+
+    # select protocol
+    if bert:
+        from lsd_cli.lsd_bert import Lsd
+        import lsd_cli.lsd_bert as lsd
+        port = 10016 if port == 10018 else port
+    else:
+        from lsd_cli.lsd_rest import Lsd
+        import lsd_cli.lsd_rest as lsd
 
     # try to connect to lsd
     try:
+        SHELL_CTX['protocol'] = lsd
         SHELL_CTX['lsd_api'] = Lsd(tenant, host, port)
     except Exception as e:
         click.echo(colorize('ERROR: connection refused {0}:{1}({2})'.format(
@@ -136,4 +146,4 @@ Welcome to    _/         _/_/_/_/    _/_/_/
                 process_input(SHELL_CTX, input_str.strip())
         except Exception as e:
             click.echo(colorize(e, rgb=0xE11500))
-            logging.debug(traceback.print_exc())
+            logging.debug(traceback.format_exc())

@@ -6,49 +6,52 @@ from pygments import formatters, highlight, lexers
 import click
 import tabulate
 from xtermcolor import colorize
+from datetime import datetime
 
 
-def __format_value(shell_ctx, value):
+def __format_json_value(shell_ctx, value):
     if not shell_ctx['pretty_print']:
         if value.get('@id', None):
-            return '<{0}>'.format(underline(value['@id']))
+            res = '<{0}>'.format(underline(value['@id']))
         elif value.get('@value', None) is not None:
-            return value['@value']
+            res = value['@value']
         else:
-            return value
+            res = value
     else:
         if value.get('@id', None):
-            return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
+            res = underline(colorize('<{0}>'.format(value['@id']), ansi=38))
         elif value.get('@value', None) is not None:
             ltype = value.get('@type', None)
 
             if not ltype:
-                return colorize(value['@value'], ansi=118)
+                res = colorize(value['@value'], ansi=118)
             else:
                 stype = ltype[32:]
 
                 if stype == '#integer':
-                    return colorize(value['@value'], ansi=197)
+                    res = colorize(value['@value'], ansi=197)
                 elif stype == '#float':
-                    return colorize(value['@value'], ansi=197)
+                    res = colorize(value['@value'], ansi=197)
                 elif stype == '#dateTime':
-                    return colorize(value['@value'], ansi=208)
+                    res = colorize(value['@value'], ansi=208)
                 elif stype == '#boolean':
-                    return colorize(value['@value'], ansi=197)
+                    res = colorize(value['@value'], ansi=197)
                 else:
-                    return value['@value']
+                    res = value['@value']
         else:
-            return value
+            res = value
+
+    return res
 
 
-def __prepare_data(shell_ctx, variables, results):
+def __prepare_dict(shell_ctx, variables, results):
     rows = []
 
     for item in results:
         row = []
 
         for k in variables:
-            value = __format_value(shell_ctx, item[k])
+            value = __format_json_value(shell_ctx, item[k])
             row.append(value)
 
         rows.append(row)
@@ -56,21 +59,57 @@ def __prepare_data(shell_ctx, variables, results):
     return rows
 
 
+def __format_lsd_value(value):
+    if isinstance(value, str):
+        if value.startswith('<') and value.endswith('>'):
+            res = underline(colorize(value, ansi=38))
+        else:
+            res = colorize(value, ansi=118)
+    else:
+        if isinstance(value, int):
+            res = colorize(value, ansi=197)
+        elif isinstance(value, float):
+            res = colorize(value, ansi=197)
+        elif isinstance(value, datetime):
+            res = colorize(value, ansi=208)
+        elif isinstance(value, bool):
+            res = colorize(value, ansi=197)
+        else:
+            res = value
+
+    return res
+
+
 def print_leaplog_result(shell_ctx, result):
     if not result:
         output = 'No results.'
-    elif shell_ctx['json_mode_enabled']:
-        output = highlight(json.dumps(result, indent=4),
-                           lexers.JsonLexer(), formatters.TerminalFormatter())
+    elif isinstance(result, dict):
+        if shell_ctx['json_mode_enabled']:
+            output = highlight(json.dumps(result, indent=4),
+                               lexers.JsonLexer(), formatters.TerminalFormatter())
+        else:
+            # title_context = underline("context")
+            # context = highlight(json.dumps(result['@context'], indent=4),
+            # lexers.JsonLexer(), formatters.TerminalFormatter())
+            rows = __prepare_dict(
+                shell_ctx, result['variables'], result['results'])
+            tab = tabulate.tabulate(rows, headers=result['variables'])
+            output = "%(tab)s" % locals()
     else:
-        # title_context = underline("context")
-        # context = highlight(json.dumps(result['@context'], indent=4),
-        # lexers.JsonLexer(), formatters.TerminalFormatter())
-        logging.debug(result)
-        rows = __prepare_data(
-            shell_ctx, result['variables'], result['results'])
-        tab = tabulate.tabulate(rows, headers=result['variables'])
-        output = "%(tab)s" % locals()
+        if shell_ctx['json_mode_enabled']:
+            raise Exception('Json mode not allowed using bert')
+        else:
+            if not shell_ctx['pretty_print']:
+                tab = tabulate.tabulate(
+                    [row.tuple for row in result.rows],
+                    headers=result.vars)
+            else:
+                tab = tabulate.tabulate(
+                    [[__format_lsd_value(value) for value in row]
+                     for row in result],
+                    headers=result.vars)
+
+            output = "%(tab)s" % locals()
 
     click.echo_via_pager(output)
 

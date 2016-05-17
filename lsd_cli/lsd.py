@@ -67,7 +67,6 @@ class Lsd:
         func = Atom('new')
         params = [(Atom('lsd_credentials'), 'leapsight', [], []), []]
         result = self.__bert_call(func, params)
-
         logging.debug('credentials: %s', result)
 
         return result

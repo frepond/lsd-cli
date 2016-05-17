@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import gc
 import logging
 import traceback
 from os.path import expanduser
@@ -132,8 +133,11 @@ Welcome to    _/         _/_/_/_/    _/_/_/
                            key_bindings_registry=manager.registry,
                            get_title=get_title, completer=ll_completer)
         try:
+            gc.disable()
             if input_str:
                 process_input(SHELL_CTX, input_str.strip())
         except Exception as e:
             click.echo(colorize(e, rgb=0xE11500))
             logging.debug(traceback.print_exc())
+        finally:
+            gc.enable()

@@ -8,37 +8,29 @@ import tabulate
 from xtermcolor import colorize
 
 
-def __format_value(shell_ctx, value):
-    if not shell_ctx['pretty_print']:
-        if value.get('@id', None):
-            return '<{0}>'.format(underline(value['@id']))
-        elif value.get('@value', None) is not None:
-            return value['@value']
-        else:
-            return value
-    else:
-        if value.get('@id', None):
-            return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
-        elif value.get('@value', None) is not None:
-            ltype = value.get('@type', None)
+def __format_value(value):
+    if value.get('@id', None):
+        return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
+    elif value.get('@value', None) is not None:
+        ltype = value.get('@type', None)
 
-            if not ltype:
-                return colorize(value['@value'], ansi=118)
+        if not ltype:
+            return colorize(value['@value'], ansi=118)
+        else:
+            stype = ltype[32:]
+
+            if stype == '#integer':
+                return colorize(value['@value'], ansi=197)
+            elif stype == '#float':
+                return colorize(value['@value'], ansi=197)
+            elif stype == '#dateTime':
+                return colorize(value['@value'], ansi=208)
+            elif stype == '#boolean':
+                return colorize(value['@value'], ansi=197)
             else:
-                stype = ltype[32:]
-
-                if stype == '#integer':
-                    return colorize(value['@value'], ansi=197)
-                elif stype == '#float':
-                    return colorize(value['@value'], ansi=197)
-                elif stype == '#dateTime':
-                    return colorize(value['@value'], ansi=208)
-                elif stype == '#boolean':
-                    return colorize(value['@value'], ansi=197)
-                else:
-                    return value['@value']
-        else:
-            return value
+                return value['@value']
+    else:
+        return value
 
 
 def __prepare_data(shell_ctx, variables, results):
@@ -48,7 +40,7 @@ def __prepare_data(shell_ctx, variables, results):
         row = []
 
         for k in variables:
-            value = __format_value(shell_ctx, item[k])
+            value = __format_value(item[k])
             row.append(value)
 
         rows.append(row)
@@ -82,15 +74,18 @@ def __is_list(obj):
 def print_json_result(shell_ctx, result):
     if not result:
         output = 'No results.'
-    elif shell_ctx['json_mode_enabled']:
+    else:
         output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
-    else:
-        if not __is_list(result):
-            result = [result]
+    # elif shell_ctx['json_mode_enabled']:
+    #     output = highlight(json.dumps(result, indent=4),
+    #                        lexers.JsonLexer(), formatters.TerminalFormatter())
+    # else:
+    #     if not __is_list(result):
+    #         result = [result]
 
-        rows = [[item[k] for k in item] for item in result]
-        output = tabulate.tabulate(rows, headers=result[0].keys())
+    #     rows = [[item[k] for k in item] for item in result]
+    #     output = tabulate.tabulate(rows, headers=result[0].keys())
 
     click.echo_via_pager(output)
 

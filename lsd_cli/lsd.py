@@ -48,8 +48,8 @@ class Lsd:
             '?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
 
     @timing
-    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r='quorum', pr='3',
-                basic_quorum='true', sloppy_quorum='true', timeout=None, limit='infinity'):
+    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r='quorum', pr=3,
+                basic_quorum=True, sloppy_quorum=True, timeout=None, limit=1000):
         url = 'http://{0}:{1}/leaplog'.format(self.__host, self.__port)
         payload = {
             'query': query,

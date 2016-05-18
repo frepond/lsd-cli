@@ -1,11 +1,12 @@
 import logging
 import os
 import re
-import sys
 import tempfile
 from subprocess import call
 
-from lsd_cli.print_utils import *
+import click
+from lsd_cli.print_utils import (clear, print_json_result,
+                                 print_leaplog_result, underline)
 from xtermcolor import colorize
 
 RE_CMD = re.compile(r'(\w+)\((.*)\)$')
@@ -87,7 +88,7 @@ def __exec_ruleset(shell_ctx, uri, filename):
     print_json_result(shell_ctx, result)
 
 
-def __h(_):
+def __help(_):
     shell_help = []
     shell_help.append(underline(colorize('LSD-CLI\n', rgb=0x71d1df)))
     shell_help.append("""
@@ -97,7 +98,7 @@ The following are the list of built-in command and leaplog sentences
 getting to lsd. Shell context is used on selects (?), write assert (++) and
 write detract (--).\n\n""")
 
-    for _, value in __commands.items():
+    for _, value in __COMMANDS.items():
         shell_help.append(colorize(value['name'], rgb=0x71d1df))
         shell_help.append('\n')
         shell_help.append('  ')
@@ -107,34 +108,51 @@ write detract (--).\n\n""")
     click.echo_via_pager(''.join(shell_help))
 
 
-def __c(_):
+# built-in commands
+def __clear(_):
     clear()
 
 
-def __ll(shell_ctx, filename):
+def __loadll(shell_ctx, filename):
     __exec_leaplog(shell_ctx, filename)
 
 
-def __rs(shell_ctx, uri, filename):
+def __loadrs(shell_ctx, uri, filename):
     __exec_ruleset(shell_ctx, uri, filename)
 
 
-def __lr(shell_ctx):
-    json_mode_enabled = shell_ctx['json_mode_enabled']
+def __listrs(shell_ctx):
     lsd_api = shell_ctx['lsd_api']
     result = lsd_api.rulesets()
     print_json_result(shell_ctx, result)
 
 
-def __lc(shell_ctx):
-    print_json_result(shell_ctx['prefix'])
+def __listm(shell_ctx):
+    print_json_result(shell_ctx, shell_ctx['prefix_mapping'])
 
 
-def __e(shell_ctx):
-    # TODO: imlement
-    click.echo(colorize("e(): Not implemented!", rgb=0xE11500))
+def __edit(shell_ctx):
+    editor = os.environ.get('EDITOR', 'vim')
+
+    with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
+        tf.write(bytes(__dump_conext(shell_ctx), 'UTF-8'))
+        tf.flush()
+        call([editor, tf.name])
+
+        # clear current shell context
+        shell_ctx['prefix_mapping'] = {}
+        shell_ctx['includes'] = []
+        shell_ctx['rules'] = []
+
+        # load new context
+        _loadconf(shell_ctx, tf.name)
 
 
+def __limit(shell_ctx, limit):
+    shell_ctx['limit'] = int(limit)
+
+
+# leaplog commands & directives
 def __prefix(shell_ctx, params):
     match = RE_PREFIX.match(params)
 
@@ -159,7 +177,7 @@ def __rule(shell_ctx, params):
 
 
 def __import(shell_ctx, params):
-    _load_context(shell_ctx, params)
+    _loadconf(shell_ctx, params)
 
 
 def __export(shell_ctx, params):
@@ -175,6 +193,7 @@ def __dump_ruleset(shell_ctx):
 
     return includes + rules
 
+
 def __dump_conext(shell_ctx):
     prefixes = ''
     for prefix, uri in shell_ctx['prefix_mapping'].items():
@@ -188,7 +207,7 @@ def __dump_conext(shell_ctx):
     return comment + context
 
 
-def _load_context(shell_ctx, filename):
+def _loadconf(shell_ctx, filename):
     with open(filename, 'r') as file:
         lineno = 0
 
@@ -203,30 +222,13 @@ def _load_context(shell_ctx, filename):
                 logging.error('Importing line: "%s"', line)
 
 
-def __edit(shell_ctx):
-    editor = os.environ.get('EDITOR', 'vim')
-
-    with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
-        tf.write(bytes(__dump_conext(shell_ctx), 'UTF-8'))
-        tf.flush()
-        call([editor, tf.name])
-
-        # clear current shell context
-        shell_ctx['prefix_mapping'] = {}
-        shell_ctx['includes'] = []
-        shell_ctx['rules'] = []
-
-        # load new context
-        _load_context(shell_ctx, tf.name)
-
-
 def __select(shell_ctx, params):
     prefix_mapping = shell_ctx['prefix_mapping']
+    limit = shell_ctx['limit'] if shell_ctx['limit'] > 0 else 'infinity'
     ruleset = __dump_ruleset(shell_ctx)
     prog = '%(params)s' % locals()
     result = shell_ctx['lsd_api'].leaplog(
-        prog, prefix_mapping=prefix_mapping, ruleset=ruleset)
-    shell_ctx['progress'] = ' [#         ] '
+        prog, prefix_mapping=prefix_mapping, ruleset=ruleset, limit=limit)
 
     print_leaplog_result(shell_ctx, result)
 
@@ -252,15 +254,26 @@ def __noc(shell_ctx):
 
 
 # shell commands dispatch table
-__commands = {
-    'h': {'cmd': __h, 'name': 'h()', 'help': 'Prints this help.'},
-    'c': {'cmd': __c, 'name': 'c()', 'help': 'Clears the terminal.'},
-    'edit': {'cmd': __e, 'name': 'edit()', 'help': 'Edits current shell contex.'},
-    'll': {'cmd': __ll, 'name': 'll(filename)',
-           'help': 'Loads an execute a leaplog program from filename.'},
-    'rs': {'cmd': __rs, 'name': 'rs(uri, filename)',
-           'help': 'Loads a ruleset from filename to LSD with the given uri name.'},
-    'lr': {'cmd': __lr, 'name': 'lr()', 'help': "Lists LSD defined rulesets."},
+__COMMANDS = {
+    'help': {'cmd': __help, 'name': 'help()', 'help': 'Prints this help.'},
+    'clear': {'cmd': __clear, 'name': 'clear()', 'help': 'Clears the terminal.'},
+    'edit': {'cmd': __edit, 'name': 'edit()', 'help': 'Edits current shell contex.'},
+    'loadll': {'cmd': __loadll, 'name': 'll(filename)',
+               'help': 'Loads an execute a leaplog program from filename.'},
+    'loadrs': {'cmd': __loadrs, 'name': 'loadrs(uri, filename)',
+               'help': 'Loads a ruleset from filename to LSD with the given uri name.'},
+    'listrs': {'cmd': __listrs, 'name': 'listrs()', 'help': 'Lists LSD defined rulesets.'},
+    'limit': {'cmd': __limit, 'name': 'limit(n)', 'help': 'Limit results to n rows.'},
+    'import': {'cmd': __import, 'name': 'import(filename>)',
+               'help': "Import the given <filename> to the shell session."},
+    'export': {'cmd': __export, 'name': 'export(filename>)',
+               'help': "Export the current shell session to <filename>."},
+    'edit': {'cmd': __edit, 'name': 'edit(filename)',
+             'help': "Export the current shell session to <filename>."},
+    'listm': {'cmd': __listm, 'name': 'listm()',
+              'help': "List prefix mapping definitions in the current shell session."},
+    'loadconf': {'cmd': _loadconf, 'name': 'loadm(filename)',
+                 'help': "Load url prefix mapping and rules from filename."},
     'select': {'cmd': __select, 'name': '?().',
                'help': 'Perform a select on lsd.'},
     'write_assert': {'cmd': __write_assert, 'name': '++().',
@@ -272,18 +285,10 @@ __commands = {
     '@prefix': {'cmd': __prefix, 'name': '@prefix prefix: <uri>.',
                 'help': "Define a new url prefix to use during the shell session."},
     '@include': {'cmd': __include, 'name': '@include <uri>.',
-                 'help': "Use the given ruleset during the shell session."},
-    'import': {'cmd': __import, 'name': 'import(filename>)',
-               'help': "Import the given <filename> to the shell session."},
-    'export': {'cmd': __export, 'name': 'export(filename>)',
-               'help': "Export the current shell session to <filename>."},
-    'edit': {'cmd': __edit, 'name': 'edit(filename)',
-             'help': "Export the current shell session to <filename>."},
-    'lc': {'cmd': __lc, 'name': 'lc(filename)',
-           'help': "List url prefix definitions in the current shell session."}
+                 'help': "Use the given ruleset during the shell session."}
 }
 
 
 def __dispatch_cmd(shell_ctx, cmd, args):
     logging.debug('%s: %s', cmd, args)
-    __commands[cmd]['cmd'](shell_ctx, *args)
+    __COMMANDS[cmd]['cmd'](shell_ctx, *args)

@@ -10,8 +10,7 @@ import pkg_resources  # part of setuptools
 import click
 from lsd_cli import lsd
 from lsd_cli.lsd import Lsd
-from lsd_cli.print_utils import *
-from lsd_cli.shell_cmd import _load_context, process_input
+from lsd_cli.shell_cmd import _loadconf, process_input
 from prompt_toolkit import prompt
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.contrib.completers import WordCompleter
@@ -36,7 +35,7 @@ SHELL_CTX = {
     'prefix_mapping': {},
     'rules': [],
     'includes': [],
-    'pretty_print': True
+    'limit': 1000
 }
 STYLE = style_from_dict({
     Token.Prompt: '#ffc853',
@@ -47,14 +46,14 @@ STYLE = style_from_dict({
 def get_bottom_toolbar_tokens(cli):
     text = 'Vi' if SHELL_CTX['vi_mode_enabled'] else 'Emacs'
     output = 'Json' if SHELL_CTX['json_mode_enabled'] else 'Tabular'
-    pretty = 'Pretty-ON' if SHELL_CTX['pretty_print'] else 'Pretty-OFF'
+    limit = SHELL_CTX['limit']
 
-    return [(Token.Toolbar, ' lsd-cli v{0}. '.format(VERSION)),
+    return [(Token.Toolbar, '|lsd-cli v{}| '.format(VERSION)),
             (Token.Toolbar, ' h() Help '),
             (Token.Toolbar, ' [F4] %s ' % text),
             (Token.Toolbar, ' [F5] %s ' % output),
-            (Token.Toolbar, ' [F6] %s ' % pretty),
-            (Token.Toolbar, ' (%0.2f ms/%0.2f ms, %d rows) '
+            (Token.Toolbar, ' [LIMIT] %s ' % limit),
+            (Token.Toolbar, ' (%0.2fms/%0.2fms, %d rows) '
              % (lsd.cli_time, lsd.lsd_time, lsd.tuples))]
 
 
@@ -72,8 +71,8 @@ def main(tenant, host, port, verbose):
     # Create a set of key bindings that have Vi mode enabled if the
     # ``vi_mode_enabled`` is True.
     if verbose:
-        format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
-        logging.basicConfig(level=logging.DEBUG, format=format)
+        fmt = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
+        logging.basicConfig(level=logging.DEBUG, format=fmt)
 
     # try to connect to lsd
     try:
@@ -118,11 +117,13 @@ Welcome to    _/         _/_/_/_/    _/_/_/
 
     ll_completer = WordCompleter(
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
-         '?().', 'import(filename)', 'export(filename)', 'h()', 'e()'])
+         '?().', 'import(filename)', 'export(filename)', 'help()', 'clear()', 'limit(n)'
+         'loadconf(filename)', 'loadll(filename)', 'loadrs(uri, filename)', 'listrs()',
+         'listm()'])
 
     # load init file ~/lsd-cli.rc
     try:
-        _load_context(SHELL_CTX, CLI_RC)
+        _loadconf(SHELL_CTX, CLI_RC)
     except Exception:
         pass
 

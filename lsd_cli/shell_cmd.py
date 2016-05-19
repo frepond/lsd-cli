@@ -12,7 +12,7 @@ from xtermcolor import colorize
 RE_CMD = re.compile(r'(\w+)\((.*)\)$')
 RE_LLOG = re.compile(r'^(\?|\+\+|\-\-)(.*.)')
 RE_DIRECTIVE = re.compile(r'^(@prefix|@include)\s+(.*.)')
-RE_PREFIX = re.compile(r'^\s*(\w+):\s*(\<.*\>).$')
+RE_PREFIX = re.compile(r'^\s*(\w+|\s*):\s*(\<.*\>).$')
 
 
 def process_input(shell_ctx, input):

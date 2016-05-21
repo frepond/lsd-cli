@@ -77,15 +77,6 @@ def print_json_result(shell_ctx, result):
     else:
         output = highlight(json.dumps(result, indent=4),
                            lexers.JsonLexer(), formatters.TerminalFormatter())
-    # elif shell_ctx['json_mode_enabled']:
-    #     output = highlight(json.dumps(result, indent=4),
-    #                        lexers.JsonLexer(), formatters.TerminalFormatter())
-    # else:
-    #     if not __is_list(result):
-    #         result = [result]
-
-    #     rows = [[item[k] for k in item] for item in result]
-    #     output = tabulate.tabulate(rows, headers=result[0].keys())
 
     click.echo_via_pager(output)
 

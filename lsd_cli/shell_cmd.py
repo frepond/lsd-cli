@@ -26,13 +26,16 @@ def process_input(shell_ctx, input):
         return
     elif match_llog:  # leaplog sentence (++ | -- | ?)
         if match_llog.group(1) == '?':
+            logging.debug('+++ prefix select')
             cmd = 'select'
             args = [input]
         elif match_llog.group(1) == '++':
+            logging.debug('+++ write assert')
             cmd = 'write_assert'
             args = [input]
         elif match_llog.group(1) == '--':
-            cmd = 'write_assert'
+            logging.debug('+++ write retract')
+            cmd = 'write_retract'
             args = [input]
         else:
             raise Exception('Invalid leaplog sentence: {}'.format(input))
@@ -48,7 +51,7 @@ def process_input(shell_ctx, input):
             cmd = 'rule'
             args = [input]
     else:  # shell cmd
-        logging.debug('+++ shell cmd')
+        logging.debug('+++ built-in cmd')
         cmd = match_cmd.group(1)
         params = match_cmd.group(2)
 
@@ -61,7 +64,6 @@ def process_input(shell_ctx, input):
 
 
 def __exec_leaplog(shell_ctx, filename):
-    shell_ctx['progress'] = ' [#         ] '
     lsd_api = shell_ctx['lsd_api']
 
     try:
@@ -110,7 +112,7 @@ write detract (--).\n\n""")
 
 # built-in commands
 def __clear(_):
-    clear()
+    click.clear()
 
 
 def __loadll(shell_ctx, filename):

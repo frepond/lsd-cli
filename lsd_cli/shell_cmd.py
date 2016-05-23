@@ -142,8 +142,12 @@ def __edit(shell_ctx):
         shell_ctx['includes'] = []
         shell_ctx['rules'] = []
 
+        lineno = 0
+
         # load new context
         for line in context.split('\n'):
+            lineno += 1
+
             try:
                 logging.debug('Importing line: "%s"', line)
                 process_input(shell_ctx, line.strip())

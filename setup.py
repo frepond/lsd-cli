@@ -7,7 +7,7 @@ dependencies = ['click', 'prompt-toolkit', 'requests', 'pygments', 'tabulate', '
 
 setup(
     name='lsd-cli',
-    version='0.1.5.1',
+    version='0.1.5.2',
     url='https://github.com/frepond/lsd-cli',
     license='BSD',
     author='Federico Repond',

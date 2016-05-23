@@ -78,7 +78,7 @@ def main(tenant, host, port, verbose):
     try:
         SHELL_CTX['lsd_api'] = Lsd(tenant, host, port)
     except Exception as e:
-        click.echo(colorize('ERROR: connection refused {0}:{1}({2})'.format(
+        click.echo(colorize('ERROR: connection refused {0}:{1}/{2}'.format(
             host, port, tenant), rgb=0xE11500))
         logging.debug(e)
 

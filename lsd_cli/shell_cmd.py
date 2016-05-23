@@ -134,20 +134,22 @@ def __listm(shell_ctx):
 
 
 def __edit(shell_ctx):
-    editor = os.environ.get('EDITOR', 'vim')
+    context = click.edit(__dump_conext(shell_ctx))
 
-    with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
-        tf.write(bytes(__dump_conext(shell_ctx), 'UTF-8'))
-        tf.flush()
-        call([editor, tf.name])
-
+    if context is not None:
         # clear current shell context
         shell_ctx['prefix_mapping'] = {}
         shell_ctx['includes'] = []
         shell_ctx['rules'] = []
 
         # load new context
-        _loadconf(shell_ctx, tf.name)
+        for line in context.split('\n'):
+            try:
+                logging.debug('Importing line: "%s"', line)
+                process_input(shell_ctx, line.strip())
+            except Exception as e:
+                logging.error(e)
+                logging.error('Importing line: "%s"', line)
 
 
 def __limit(shell_ctx, limit):

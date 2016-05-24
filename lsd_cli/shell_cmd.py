@@ -133,6 +133,21 @@ def __listm(shell_ctx):
     print_json_result(shell_ctx, shell_ctx['prefix_mapping'])
 
 
+def __process_batch_input(lines):
+    lineno = 0
+
+    # load new context
+    for line in lines:
+        lineno += 1
+
+        try:
+            logging.debug('Importing line: "%s"', line)
+            process_input(shell_ctx, line.strip())
+        except Exception as e:
+            logging.error(e)
+            logging.error('Importing line: "%s"', line)
+
+
 def __edit(shell_ctx):
     context = click.edit(__dump_conext(shell_ctx))
 
@@ -142,18 +157,7 @@ def __edit(shell_ctx):
         shell_ctx['includes'] = []
         shell_ctx['rules'] = []
 
-        lineno = 0
-
-        # load new context
-        for line in context.split('\n'):
-            lineno += 1
-
-            try:
-                logging.debug('Importing line: "%s"', line)
-                process_input(shell_ctx, line.strip())
-            except Exception as e:
-                logging.error(e)
-                logging.error('Importing line: "%s"', line)
+        __process_batch_load(context.split('\n'))
 
 
 def __limit(shell_ctx, limit):
@@ -217,17 +221,7 @@ def __dump_conext(shell_ctx):
 
 def _loadconf(shell_ctx, filename):
     with open(filename, 'r') as file:
-        lineno = 0
-
-        for line in file:
-            lineno += 1
-
-            try:
-                logging.debug('Importing line: "%s"', line)
-                process_input(shell_ctx, line.strip())
-            except Exception as e:
-                logging.error(e)
-                logging.error('Importing line: "%s"', line)
+        __process_batch_input(file)
 
 
 def __select(shell_ctx, params):

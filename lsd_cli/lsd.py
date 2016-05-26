@@ -48,22 +48,26 @@ class Lsd:
             '?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
 
     @timing
-    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r='quorum', pr=3,
-                basic_quorum=True, sloppy_quorum=True, timeout=None, limit=1000):
+    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r=None, pr=None,
+                w=None, cw=None, pw=None, basic_quorum=None, ts=None, timeout=None, limit=1000):
         url = 'http://{0}:{1}/leaplog'.format(self.__host, self.__port)
         payload = {
             'query': query,
             'program': program,
             'ruleset': ruleset,
             'prefix_mapping': prefix_mapping,
-            'r': r,
-            'pr': pr,
-            'basic_quorum': basic_quorum,
-            'sloppy_quorum': sloppy_quorum,
+            'consistency_options': {
+                'r': r,
+                'pr': pr,
+                'basic_quorum': basic_quorum
+            },
             'timeout': timeout,
-            'limit': limit
+            'limit': limit,
+            'ts': ts
         }
         payload = {k: v for k, v in payload.items() if v}
+        payload['consistency_options'] = {
+            k: v for k, v in payload['consistency_options'].items() if v}
         headers = self.__headers()
 
         logging.debug('leaplog payload: %s', payload)

@@ -1,4 +1,4 @@
-import json
+import ujson as json
 import logging
 
 from pygments import formatters, highlight, lexers

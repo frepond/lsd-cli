@@ -9,13 +9,14 @@ lsd_time = 0.0
 tuples = 0
 
 
-def timing(f):
-    def func_wrapper(*args, **kwargs):
+def timing(fun):
+    """Computes basic LSD opration statistics."""
+    def _func_wrapper(*args, **kwargs):
         global cli_time
         global lsd_time
         global tuples
         time1 = time.time()
-        ret = f(*args, **kwargs)
+        ret = fun(*args, **kwargs)
         time2 = time.time()
         cli_time = ((time2 - time1) * 1000.0)
         try:
@@ -30,7 +31,7 @@ def timing(f):
 
         return ret
 
-    return func_wrapper
+    return _func_wrapper
 
 
 class Lsd:

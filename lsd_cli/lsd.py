@@ -34,6 +34,7 @@ def timing(f):
 
 
 class Lsd:
+    """Barebones LSD leaplog API client"""
 
     def __init__(self, tenant, host, port, content='application/leaplog-results+json'):
         self.__tenant = tenant
@@ -47,17 +48,25 @@ class Lsd:
         self.__test_connection()
 
     @timing
-    def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r=None, pr=None,
+    def leaplog(self, program, ruleset=None, prefix_mapping=None, r=None, pr=None,
                 w=None, cw=None, pw=None, basic_quorum=None, ts=None, timeout=None, limit=1000):
+        """Excute a leaplog query or program in LSD.
+
+        :param program: the leaplog program to evaluate.
+        :param ruleset: the ruleset to evaluate the program with.
+        :param prefix_mappings: the prefix mappings used in the propgram.
+        """
         url = 'http://{0}:{1}/leaplog'.format(self.__host, self.__port)
         payload = {
-            'query': query,
             'program': program,
             'ruleset': ruleset,
             'prefix_mapping': prefix_mapping,
             'consistency_options': {
                 'r': r,
                 'pr': pr,
+                'w': w,
+                'cw': cw,
+                'pw': pw,
                 'basic_quorum': basic_quorum
             },
             'timeout': timeout,
@@ -84,6 +93,7 @@ class Lsd:
 
     @timing
     def rulesets(self):
+        """List the rulesets defined in LSD."""
         url = 'http://{0}:{1}/rulesets'.format(self.__host, self.__port)
         headers = {
             'Authorization': self.__tenant,
@@ -102,6 +112,11 @@ class Lsd:
 
     @timing
     def create_ruleset(self, uri, source):
+        """Creates a new rulset under a given URI.
+
+        :param uri: the URI under which the ruleset is registered.
+        :param source: the source code containg the ruleset statements.
+        """
         url = 'http://{0}:{1}/rulesets'.format(self.__host, self.__port)
         headers = {
             'Authorization': self.__tenant,
@@ -125,6 +140,16 @@ class Lsd:
     @timing
     def create_graph(self, uri, description, type=None, is_active=None, is_mutable=None,
                      basic_quorum=None, cw=None, n=None, pr=None, pw=None, r=None, w=None):
+        """Creates a new grpah in LSD.
+
+        :param uri: the URI of the new graph.
+        :param description: the description of the new graph.
+        :param type: the type of graph to be created. One of in_memory|disk|memory_disk.
+                     Default: memory.
+        :param is_active: whether the graph is active or not from the moment of creation.
+                          Default: true.
+        :param mutable: whether the graph is read-only or not. Default: false.
+        """
         url = 'http://{0}:{1}/graphs'.format(self.__host, self.__port)
         payload = {
             'uri': uri,

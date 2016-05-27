@@ -107,11 +107,11 @@ def main(tenant, host, port, verbose):
 
     click.clear()
     click.echo(colorize("""
-Welcome to    _/         _/_/_/_/    _/_/_/
-             _/         _/          _/    _/
-            _/         _/_/_/_/    _/    _/
-           _/               _/    _/    _/
-          _/_/_/_/   _/_/_/_/    _/_/_/      command line interface!
+Welcome to    _/          _/_/_/  _/_/_/
+             _/        _/        _/    _/
+            _/          _/_/    _/    _/
+           _/              _/  _/    _/
+          _/_/_/_/  _/_/_/    _/_/_/      command line interface!
 """
                         , rgb=0x2cb9d0))
 

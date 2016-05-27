@@ -160,6 +160,14 @@ def __edit(shell_ctx):
         __process_batch_input(shell_ctx, context.split('\n'))
 
 
+def __graph(shell_ctx, *params):
+    logging.debug("+++ params: %s", params)
+    lsd_api = shell_ctx['lsd_api']
+    result = lsd_api.create_graph(*params)
+
+    print_json_result(shell_ctx, result)
+
+
 def __limit(shell_ctx, limit):
     shell_ctx['limit'] = int(limit)
 
@@ -260,6 +268,7 @@ __COMMANDS = {
     'help': {'cmd': __help, 'name': 'help()', 'help': 'Prints this help.'},
     'clear': {'cmd': __clear, 'name': 'clear()', 'help': 'Clears the terminal.'},
     'edit': {'cmd': __edit, 'name': 'edit()', 'help': 'Edits current shell contex.'},
+    'graph': {'cmd': __graph, 'name': 'graph(uri, desc)', 'help': 'creates a new graph in lsd.'},
     'loadll': {'cmd': __loadll, 'name': 'll(filename)',
                'help': 'Loads an execute a leaplog program from filename.'},
     'loadrs': {'cmd': __loadrs, 'name': 'loadrs(uri, filename)',

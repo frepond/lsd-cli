@@ -122,6 +122,49 @@ class Lsd:
 
         return result
 
+    @timing
+    def create_graph(self, uri, description, type=None, is_active=None, is_mutable=None,
+                     basic_quorum=None, cw=None, n=None, pr=None, pw=None, r=None, w=None):
+        url = 'http://{0}:{1}/graphs'.format(self.__host, self.__port)
+        payload = {
+            'uri': uri,
+            'description': description,
+            'type': type,
+            'is_active': is_active,
+            'is_mutable': is_mutable,
+            'consistency_options': {
+                'basic_quorum': basic_quorum,
+                'cw': cw,
+                'n': n,
+                'pr': pr,
+                'pw': pw,
+                'r': r,
+                'w': w
+            }
+        }
+
+        payload = {k: v for k, v in payload.items() if v}
+        payload['consistency_options'] = {
+            k: v for k, v in payload['consistency_options'].items() if v}
+        headers = {
+            'Authorization': self.__tenant,
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip'
+        }
+
+        logging.debug('graphs payload: %s', payload)
+
+        r = self.__session.post(url, json=payload, headers=headers)
+        self.__check_error(r)
+
+        if r.status_code == 204:
+            result = None
+        else:
+            r.encoding = 'UTF-8'
+            result = json.loads(r.text)
+
+        return result
+
     def __test_connection(self):
         url = 'http://{0}:{1}/'.format(self.__host, self.__port)
         headers = {

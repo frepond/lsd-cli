@@ -119,7 +119,7 @@ Welcome to    _/         _/_/_/_/    _/_/_/
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
          '?().', 'import(filename)', 'export(filename)', 'help()', 'clear()', 'limit(n)',
          'loadconf(filename)', 'loadll(filename)', 'loadrs(uri, filename)', 'listrs()',
-         'listm()'])
+         'listm()', 'graph(uri, desc)'])
 
     # load init file ~/lsd-cli.rc
     try:
@@ -139,6 +139,6 @@ Welcome to    _/         _/_/_/_/    _/_/_/
                 process_input(SHELL_CTX, input_str.strip())
         except Exception as e:
             click.echo(colorize(e, rgb=0xE11500))
-            logging.debug(traceback.print_exc())
+            logging.debug(traceback.format_exc())
         finally:
             gc.enable()

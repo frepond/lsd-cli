@@ -44,8 +44,7 @@ class Lsd:
         self.__session.trust_env = False
 
         # test lsd connection
-        self.leaplog(
-            '?(<invalid:uri>, <invalid:uri>, <invalid:uri>, <lsd:demo:graph>).')
+        self.__test_connection()
 
     @timing
     def leaplog(self, query, program=None, ruleset=None, prefix_mapping=None, r=None, pr=None,
@@ -122,6 +121,19 @@ class Lsd:
         result = json.loads(r.text)
 
         return result
+
+    def __test_connection(self):
+        url = 'http://{0}:{1}/'.format(self.__host, self.__port)
+        headers = {
+            'Authorization': self.__tenant,
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip'
+        }
+
+        r = self.__session.get(url, headers=headers)
+        self.__check_error(r)
+
+        return
 
     def __headers(self):
         return {

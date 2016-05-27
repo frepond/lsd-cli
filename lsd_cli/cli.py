@@ -117,7 +117,7 @@ Welcome to    _/         _/_/_/_/    _/_/_/
 
     ll_completer = WordCompleter(
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
-         '?().', 'import(filename)', 'export(filename)', 'help()', 'clear()', 'limit(n)'
+         '?().', 'import(filename)', 'export(filename)', 'help()', 'clear()', 'limit(n)',
          'loadconf(filename)', 'loadll(filename)', 'loadrs(uri, filename)', 'listrs()',
          'listm()'])
 

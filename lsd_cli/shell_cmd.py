@@ -133,7 +133,7 @@ def __listm(shell_ctx):
     print_json_result(shell_ctx, shell_ctx['prefix_mapping'])
 
 
-def __process_batch_input(lines):
+def __process_batch_input(shell_ctx, lines):
     lineno = 0
 
     # load new context
@@ -157,7 +157,7 @@ def __edit(shell_ctx):
         shell_ctx['includes'] = []
         shell_ctx['rules'] = []
 
-        __process_batch_load(context.split('\n'))
+        __process_batch_input(shell_ctx, context.split('\n'))
 
 
 def __limit(shell_ctx, limit):
@@ -221,7 +221,7 @@ def __dump_conext(shell_ctx):
 
 def _loadconf(shell_ctx, filename):
     with open(filename, 'r') as file:
-        __process_batch_input(file)
+        __process_batch_input(shell_ctx, file)
 
 
 def __select(shell_ctx, params):

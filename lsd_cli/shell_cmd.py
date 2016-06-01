@@ -269,7 +269,7 @@ __COMMANDS = {
     'clear': {'cmd': __clear, 'name': 'clear()', 'help': 'Clears the terminal.'},
     'edit': {'cmd': __edit, 'name': 'edit()', 'help': 'Edits current shell contex.'},
     'graph': {'cmd': __graph, 'name': 'graph(uri, desc)', 'help': 'creates a new graph in lsd.'},
-    'loadll': {'cmd': __loadll, 'name': 'll(filename)',
+    'loadll': {'cmd': __loadll, 'name': 'loadll(filename)',
                'help': 'Loads an execute a leaplog program from filename.'},
     'loadrs': {'cmd': __loadrs, 'name': 'loadrs(uri, filename)',
                'help': 'Loads a ruleset from filename to LSD with the given uri name.'},

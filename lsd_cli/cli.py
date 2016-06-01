@@ -49,7 +49,7 @@ def get_bottom_toolbar_tokens(cli):
     limit = SHELL_CTX['limit']
 
     return [(Token.Toolbar, '|lsd-cli v{}| '.format(VERSION)),
-            (Token.Toolbar, ' h() Help '),
+            (Token.Toolbar, ' help() Help '),
             (Token.Toolbar, ' [F4] %s ' % text),
             (Token.Toolbar, ' [F5] %s ' % output),
             (Token.Toolbar, ' [LIMIT] %s ' % limit),

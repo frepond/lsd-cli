@@ -28,3 +28,18 @@ Simply run the following to install it locally:
 Then:
 
     $ export PATH=$PATH:~/.local/bin
+
+
+## Taste some awesome lsd-cli!
+
+Welcome screen:
+
+![Welcome)](images/welcome.png)
+
+Help screen:
+
+![Help](images/help.png)
+
+A beautifully formated query result:
+
+![Query](images/query.png)

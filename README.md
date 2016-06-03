@@ -18,13 +18,25 @@ To use it simply run:
 If you want to test this tool and contribute to the development clone this repository
 and start submitting your changes.
 
-If you don't use `pipsi`, you're missing out.
-Here are [installation instructions](https://github.com/mitsuhiko/pipsi#readme).
-
 Simply run the following to install it locally:
 
-    $ pipsi install --editable .
+    $ pip install -e .
 
-Then:
+Then just start de client:
 
-    $ export PATH=$PATH:~/.local/bin
+    $ lsd-cli
+
+
+## Taste some awesome lsd-cli!
+
+Welcome screen:
+
+![Welcome)](images/welcome.png)
+
+Help screen:
+
+![Help](images/help.png)
+
+A beautifully formated query result:
+
+![Query](images/query.png)

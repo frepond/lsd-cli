@@ -37,7 +37,7 @@ def __format_value(value):
     return result
 
 
-def __prepare_data(shell_ctx, variables, results):
+def __prepare_data(_, variables, results):
     rows = []
 
     for item in results:

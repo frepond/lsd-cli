@@ -14,33 +14,36 @@ RE_DIRECTIVE = re.compile(r'^(@prefix|@include)\s+(.*.)')
 RE_PREFIX = re.compile(r'^\s*(\w+|\s*):\s*(\<.*\>).$')
 
 
-def process_input(shell_ctx, input):
-    """Process cli input and dispatch."""
+def process_input(shell_ctx, input_str):
+    """Process cli input and dispatch.
+    :param shell_ctx: the shell context configuration.
+    :param input_str: the user's entered command.
+    """
     cmd = None
     args = []
-    match_llog = RE_LLOG.match(input)
-    match_cmd = RE_CMD.match(input)
+    match_llog = RE_LLOG.match(input_str)
+    match_cmd = RE_CMD.match(input_str)
 
-    if not input or input.startswith('%'):  # comment pass
+    if not input_str or input_str.startswith('%'):  # comment pass
         logging.debug('+++ comment or empty')
         return
     elif match_llog:  # leaplog sentence (++ | -- | ?)
         if match_llog.group(1) == '?':
             logging.debug('+++ prefix select')
             cmd = 'select'
-            args = [input]
+            args = [input_str]
         elif match_llog.group(1) == '++':
             logging.debug('+++ write assert')
             cmd = 'write_assert'
-            args = [input]
+            args = [input_str]
         elif match_llog.group(1) == '--':
             logging.debug('+++ write retract')
             cmd = 'write_retract'
-            args = [input]
+            args = [input_str]
         else:
-            raise Exception('Invalid leaplog sentence: {}'.format(input))
+            raise Exception('Invalid leaplog sentence: {}'.format(input_str))
     elif not match_cmd:  # shell directive
-        match_dir = RE_DIRECTIVE.match(input)
+        match_dir = RE_DIRECTIVE.match(input_str)
 
         if match_dir:  # prefix/include definition
             logging.debug('+++ prefix directive')
@@ -49,7 +52,7 @@ def process_input(shell_ctx, input):
         else:  # rule
             logging.debug('+++ rule directive')
             cmd = 'rule'
-            args = [input]
+            args = [input_str]
     else:  # shell cmd
         logging.debug('+++ built-in cmd')
         cmd = match_cmd.group(1)
@@ -69,7 +72,7 @@ def __exec_leaplog(shell_ctx, filename):
     try:
         with open(filename, 'r') as file:
             content = file.read()
-    except Exception as e:
+    except Exception:
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.leaplog(content)
@@ -82,7 +85,7 @@ def __exec_ruleset(shell_ctx, uri, filename):
     try:
         with open(filename, 'r') as file:
             ruleset = file.read()
-    except Exception as e:
+    except Exception:
         raise Exception("ERROR: could not read {0}".format(filename))
 
     result = lsd_api.create_ruleset(uri, ruleset)
@@ -143,8 +146,8 @@ def __process_batch_input(shell_ctx, lines):
         try:
             logging.debug('Importing line: "%s"', line)
             process_input(shell_ctx, line.strip())
-        except Exception as e:
-            logging.error(e)
+        except Exception as exc:
+            logging.error(exc)
             logging.error('Importing line: "%s"', line)
 
 
@@ -222,7 +225,7 @@ def __dump_conext(shell_ctx):
     ruleset = __dump_ruleset(shell_ctx)
 
     comment = '% This file is imported one line at a time. Do not split lines!\n'
-    context = '%(prefixes)s%(ruleset)s' % locals()
+    context = '%(prefixes)s%(ruleset)s' % {'prefixes': prefixes, 'ruleset': ruleset}
 
     return comment + context
 
@@ -245,7 +248,7 @@ def __select(shell_ctx, params):
 
 def __write(shell_ctx, params):
     prefix_dirs = __dump_conext(shell_ctx)
-    prog = '%(prefix_dirs)s\n\n%(params)s' % locals()
+    prog = '%(prefix_dirs)s\n\n%(params)s' % {'prefix_dirs': prefix_dirs, 'params': params}
     result = shell_ctx['lsd_api'].leaplog(prog)
 
     print_leaplog_result(shell_ctx, result)
@@ -259,7 +262,7 @@ def __write_retract(shell_ctx, params):
     __write(shell_ctx, params)
 
 
-def __noc(shell_ctx):
+def __noc(_):
     click.echo(colorize("Not implemented!", rgb=0xE11500))
 
 
@@ -279,8 +282,6 @@ __COMMANDS = {
                'help': "Import the given <filename> to the shell session."},
     'export': {'cmd': __export, 'name': 'export(filename>)',
                'help': "Export the current shell session to <filename>."},
-    'edit': {'cmd': __edit, 'name': 'edit(filename)',
-             'help': "Export the current shell session to <filename>."},
     'listm': {'cmd': __listm, 'name': 'listm()',
               'help': "List prefix mapping definitions in the current shell session."},
     'loadconf': {'cmd': _loadconf, 'name': 'loadm(filename)',

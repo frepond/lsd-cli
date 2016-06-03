@@ -45,8 +45,11 @@ STYLE = style_from_dict({
 })
 
 
-def get_bottom_toolbar_tokens(cli):
-    """Returns the cli toolbar."""
+def get_bottom_toolbar_tokens(_):
+    """Returns the cli toolbar.
+    :param cli: the command line object.
+    :return: the list of toolbar options.
+    """
     text = 'Vi' if SHELL_CTX['vi_mode_enabled'] else 'Emacs'
     output = 'Json' if SHELL_CTX['json_mode_enabled'] else 'Tabular'
     limit = SHELL_CTX['limit']
@@ -81,10 +84,10 @@ def main(tenant, host, port, verbose):
     # try to connect to lsd
     try:
         SHELL_CTX['lsd_api'] = Lsd(tenant, host, port)
-    except Exception as e:
+    except Exception as exc:
         click.echo(colorize('ERROR: connection refused {0}:{1}/{2}'.format(
             host, port, tenant), rgb=0xE11500))
-        logging.debug(e)
+        logging.debug(exc)
 
         exit(1)
 
@@ -93,19 +96,19 @@ def main(tenant, host, port, verbose):
 
     # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F4)
-    def _f4(_event):
+    def _f4(_):
         """ Toggle between Emacs and Vi mode. """
         SHELL_CTX['vi_mode_enabled'] = not SHELL_CTX['vi_mode_enabled']
 
     # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F5)
-    def _f5(_event):
+    def _f5(_):
         """ Toggle between Json and Tabular mode. """
         SHELL_CTX['json_mode_enabled'] = not SHELL_CTX['json_mode_enabled']
 
     # add an additional key binding for toggling this flag.
     @manager.registry.add_binding(Keys.F6)
-    def _f6(_event):
+    def _f6(_):
         """ Toggle between Json and Tabular mode. """
         SHELL_CTX['pretty_print'] = not SHELL_CTX['pretty_print']
 
@@ -141,8 +144,8 @@ Welcome to    _/          _/_/_/  _/_/_/
             gc.disable()
             if input_str:
                 process_input(SHELL_CTX, input_str.strip())
-        except Exception as e:
-            click.echo(colorize(e, rgb=0xE11500))
+        except Exception as exc:
+            click.echo(colorize(exc, rgb=0xE11500))
             logging.debug(traceback.format_exc())
         finally:
             gc.enable()

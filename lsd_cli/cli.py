@@ -1,3 +1,5 @@
+"""LSD leaplog cli main module."""
+
 from __future__ import unicode_literals
 
 import gc
@@ -44,6 +46,7 @@ STYLE = style_from_dict({
 
 
 def get_bottom_toolbar_tokens(cli):
+    """Returns the cli toolbar."""
     text = 'Vi' if SHELL_CTX['vi_mode_enabled'] else 'Emacs'
     output = 'Json' if SHELL_CTX['json_mode_enabled'] else 'Tabular'
     limit = SHELL_CTX['limit']
@@ -58,6 +61,7 @@ def get_bottom_toolbar_tokens(cli):
 
 
 def get_title():
+    """Returns the window title."""
     return 'lsd-cli v{0}'.format(VERSION)
 
 

@@ -1,36 +1,40 @@
-import ujson as json
+"""CLI print utils."""
+
 import logging
 
 from pygments import formatters, highlight, lexers
 
 import click
 import tabulate
+import ujson as json
 from xtermcolor import colorize
 
 
 def __format_value(value):
     if value.get('@id', None):
-        return underline(colorize('<{0}>'.format(value['@id']), ansi=38))
+        result = underline(colorize('<{0}>'.format(value['@id']), ansi=38))
     elif value.get('@value', None) is not None:
         ltype = value.get('@type', None)
 
         if not ltype:
-            return colorize(value['@value'], ansi=118)
+            result = colorize(value['@value'], ansi=118)
         else:
             stype = ltype[32:]
 
             if stype == '#integer':
-                return colorize(value['@value'], ansi=197)
+                result = colorize(value['@value'], ansi=197)
             elif stype == '#float':
-                return colorize(value['@value'], ansi=197)
+                result = colorize(value['@value'], ansi=197)
             elif stype == '#dateTime':
-                return colorize(value['@value'], ansi=208)
+                result = colorize(value['@value'], ansi=208)
             elif stype == '#boolean':
-                return colorize(value['@value'], ansi=197)
+                result = colorize(value['@value'], ansi=197)
             else:
-                return value['@value']
+                result = value['@value']
     else:
-        return value
+        result = value
+
+    return result
 
 
 def __prepare_data(shell_ctx, variables, results):
@@ -49,6 +53,10 @@ def __prepare_data(shell_ctx, variables, results):
 
 
 def print_leaplog_result(shell_ctx, result):
+    """Leaplog result (json-ld) formatter and stdout printer.
+    :param shell_ctx: the shell context configuration.
+    :param result: the json-ld to format and print.
+    """
     if not result:
         output = 'No results.'
     elif shell_ctx['json_mode_enabled']:
@@ -62,7 +70,7 @@ def print_leaplog_result(shell_ctx, result):
         rows = __prepare_data(
             shell_ctx, result['variables'], result['results'])
         tab = tabulate.tabulate(rows, headers=result['variables'])
-        output = "%(tab)s" % locals()
+        output = '%(tab)s' % locals()
 
     click.echo_via_pager(output)
 
@@ -71,7 +79,11 @@ def __is_list(obj):
     return hasattr(obj, '__iter__') and not isinstance(obj, str) and not isinstance(obj, dict)
 
 
-def print_json_result(shell_ctx, result):
+def print_json_result(_, result):
+    """Json result formatter and stdout printer.
+    :param shell_ctx: the shell context configuration.
+    :param result: the json to format and print.
+    """
     if not result:
         output = 'No results.'
     else:
@@ -81,13 +93,22 @@ def print_json_result(shell_ctx, result):
     click.echo_via_pager(output)
 
 
-def bold(s):
-    return '\033[1m%s\033[0m' % s
+def bold(string):
+    """Adds ansi bold format to a string.
+    :param s: the string to format.
+    :return: the formated string.
+    """
+    return '\033[1m%s\033[0m' % string
 
 
-def underline(s):
-    return '\033[4m%s\033[0m' % s
+def underline(string):
+    """Adds ansi underline format to a string.
+    :param s: the string to format.
+    :return: the formated string.
+    """
+    return '\033[4m%s\033[0m' % string
 
 
 def clear():
+    """Clears the stdout."""
     click.echo("%c[2J\033[1;1H" % 27)

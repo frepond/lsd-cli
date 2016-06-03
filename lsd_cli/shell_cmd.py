@@ -1,11 +1,10 @@
+"""CLI command interpreter and dispatcher."""
+
 import logging
-import os
 import re
-import tempfile
-from subprocess import call
 
 import click
-from lsd_cli.print_utils import (clear, print_json_result,
+from lsd_cli.print_utils import (print_json_result,
                                  print_leaplog_result, underline)
 from xtermcolor import colorize
 
@@ -16,6 +15,7 @@ RE_PREFIX = re.compile(r'^\s*(\w+|\s*):\s*(\<.*\>).$')
 
 
 def process_input(shell_ctx, input):
+    """Process cli input and dispatch."""
     cmd = None
     args = []
     match_llog = RE_LLOG.match(input)

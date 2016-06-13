@@ -10,7 +10,7 @@ tuples = 0
 
 
 def timing(fun):
-    """Computes basic LSD opration statistics."""
+    """Computes basic LSD operation statistics."""
     def _func_wrapper(*args, **kwargs):
         global cli_time
         global lsd_time

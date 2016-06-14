@@ -659,7 +659,10 @@ def visualise(json_data):
     ]
 }
     '''
-    # json_string = json.dumps(json_data, indent=4)
+    results = json_data['results']
+    for result in results:
+        result['@context'] = "http://schema.org/"
+    #json_string = json.dumps(results, indent=4)
 
     with NamedTemporaryFile(delete=False, suffix=".html") as tempf:
         data = TEMPLATE % locals()

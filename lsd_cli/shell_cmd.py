@@ -4,8 +4,9 @@ import logging
 import re
 
 import click
-from lsd_cli.print_utils import (print_json_result,
-                                 print_leaplog_result, underline)
+from lsd_cli.print_utils import (print_json_result, print_leaplog_result,
+                                 underline)
+from lsd_cli.vis import visualise
 from xtermcolor import colorize
 
 RE_CMD = re.compile(r'(\w+)\((.*)\)$')
@@ -261,6 +262,18 @@ def __write_assert(shell_ctx, params):
 def __write_retract(shell_ctx, params):
     __write(shell_ctx, params)
 
+def __vis(shell_ctx, *params):
+    params = ','.join(params)
+    prefix_mapping = shell_ctx['prefix_mapping']
+    limit = shell_ctx['limit'] if shell_ctx['limit'] > 0 else 'infinity'
+    ruleset = __dump_ruleset(shell_ctx)
+    prog = '%(params)s' % locals()
+    shell_ctx['lsd_api'].__content = 'application/sparql-results+json'
+    result = shell_ctx['lsd_api'].leaplog(
+        prog, prefix_mapping=prefix_mapping, ruleset=ruleset, limit=limit)
+
+    visualise(result)
+
 
 def __noc(_):
     click.echo(colorize("Not implemented!", rgb=0xE11500))
@@ -294,6 +307,8 @@ __COMMANDS = {
                       'help': 'Write an retract on lsd.'},
     'rule': {'cmd': __rule, 'name': '().',
              'help': 'Partial rule definition for the current shell session.'},
+    'vis': {'cmd': __vis, 'name': 'vis(query)',
+             'help': 'Visualise query results in the default browser.'},
     '@prefix': {'cmd': __prefix, 'name': '@prefix prefix: <uri>.',
                 'help': "Define a new url prefix to use during the shell session."},
     '@include': {'cmd': __include, 'name': '@include <uri>.',

@@ -126,7 +126,7 @@ Welcome to    _/          _/_/_/  _/_/_/
         ['@prefix prefix: <uri>.', '@include <uri>.', '++().', '--().', '+().', '-().',
          '?().', 'import(filename)', 'export(filename)', 'help()', 'clear()', 'limit(n)',
          'loadconf(filename)', 'loadll(filename)', 'loadrs(uri, filename)', 'listrs()',
-         'listm()', 'graph(uri, desc)', 'vis(?())'])
+         'listm()', 'graph(uri, desc)', 'vis(filename)'])
 
     # load init file ~/lsd-cli.rc
     try:

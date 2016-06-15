@@ -67,17 +67,17 @@ def process_input(shell_ctx, input_str):
     __dispatch_cmd(shell_ctx, cmd, args)
 
 
-def __exec_leaplog(shell_ctx, filename):
+def __exec_leaplog(shell_ctx, filename, content='application/leaplog-results+json'):
     lsd_api = shell_ctx['lsd_api']
 
     try:
         with open(filename, 'r') as file:
-            content = file.read()
+            prog = file.read()
     except Exception:
         raise Exception("ERROR: could not read {0}".format(filename))
 
-    result = lsd_api.leaplog(content)
-    print_leaplog_result(shell_ctx, result)
+    return lsd_api.leaplog(prog, content=content)
+
 
 
 def __exec_ruleset(shell_ctx, uri, filename):
@@ -120,7 +120,9 @@ def __clear(_):
 
 
 def __loadll(shell_ctx, filename):
-    __exec_leaplog(shell_ctx, filename)
+    result = __exec_leaplog(shell_ctx, filename)
+
+    print_leaplog_result(shell_ctx, result)
 
 
 def __loadrs(shell_ctx, uri, filename):
@@ -262,15 +264,9 @@ def __write_assert(shell_ctx, params):
 def __write_retract(shell_ctx, params):
     __write(shell_ctx, params)
 
-def __vis(shell_ctx, *params):
-    params = ','.join(params)
-    prefix_mapping = shell_ctx['prefix_mapping']
-    limit = shell_ctx['limit'] if shell_ctx['limit'] > 0 else 'infinity'
-    ruleset = __dump_ruleset(shell_ctx)
-    prog = '%(params)s' % locals()
-    shell_ctx['lsd_api'].__content = 'application/sparql-results+json'
-    result = shell_ctx['lsd_api'].leaplog(
-        prog, prefix_mapping=prefix_mapping, ruleset=ruleset, limit=limit)
+
+def __vis(shell_ctx, filename):
+    result = __exec_leaplog(shell_ctx, filename, content='application/sparql-results+json')
 
     visualise(result)
 
@@ -307,7 +303,7 @@ __COMMANDS = {
                       'help': 'Write an retract on lsd.'},
     'rule': {'cmd': __rule, 'name': '().',
              'help': 'Partial rule definition for the current shell session.'},
-    'vis': {'cmd': __vis, 'name': 'vis(query)',
+    'vis': {'cmd': __vis, 'name': 'vis(filename)',
              'help': 'Visualise query results in the default browser.'},
     '@prefix': {'cmd': __prefix, 'name': '@prefix prefix: <uri>.',
                 'help': "Define a new url prefix to use during the shell session."},

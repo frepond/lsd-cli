@@ -50,13 +50,15 @@ class Lsd:
 
     @timing
     def leaplog(self, program, ruleset=None, prefix_mapping=None, r=None, pr=None,
-                w=None, cw=None, pw=None, basic_quorum=None, ts=None, timeout=None, limit=1000):
+                w=None, cw=None, pw=None, basic_quorum=None, ts=None, timeout=None, limit=1000,
+                content='application/leaplog-results+json'):
         """Excute a leaplog query or program in LSD.
 
         :param program: the leaplog program to evaluate.
         :param ruleset: the ruleset to evaluate the program with.
         :param prefix_mappings: the prefix mappings used in the propgram.
         """
+        self.__content = content
         url = 'http://{0}:{1}/leaplog'.format(self.__host, self.__port)
         payload = {
             'program': program,

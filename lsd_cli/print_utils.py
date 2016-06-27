@@ -11,7 +11,9 @@ from xtermcolor import colorize
 
 
 def __format_value(value):
-    if value.get('@id', None):
+    if isinstance(value, list):
+        result = '[{0} elems...]'.format(len(value))
+    elif value.get('@id', None):
         result = underline(colorize('<{0}>'.format(value['@id']), ansi=38))
     elif value.get('@value', None) is not None:
         ltype = value.get('@type', None)

@@ -31,7 +31,7 @@ Then just start de client:
 
 Welcome screen:
 
-![Welcome)](images/welcome.png)
+![Welcome](images/welcome.png)
 
 Help screen:
 

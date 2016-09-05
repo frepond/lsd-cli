@@ -30,7 +30,7 @@ def process_input(shell_ctx, input_str):
         return
     elif match_llog:  # leaplog sentence (++ | -- | ?)
         if match_llog.group(1) == '?':
-            logging.debug('+++ prefix select')
+            logging.debug('+++ select')
             cmd = 'select'
             args = [input_str]
         elif match_llog.group(1) == '++':
@@ -47,7 +47,7 @@ def process_input(shell_ctx, input_str):
         match_dir = RE_DIRECTIVE.match(input_str)
 
         if match_dir:  # prefix/include definition
-            logging.debug('+++ prefix directive')
+            logging.debug('+++ prefix/include directive')
             cmd = match_dir.group(1)
             args = [match_dir.group(2)]
         else:  # rule
@@ -77,7 +77,6 @@ def __exec_leaplog(shell_ctx, filename, content='application/leaplog-results+jso
         raise Exception("ERROR: could not read {0}".format(filename))
 
     return lsd_api.leaplog(prog, content=content)
-
 
 
 def __exec_ruleset(shell_ctx, uri, filename):
@@ -228,7 +227,7 @@ def __dump_conext(shell_ctx):
     ruleset = __dump_ruleset(shell_ctx)
 
     comment = '% This file is imported one line at a time. Do not split lines!\n'
-    context = '%(prefixes)s%(ruleset)s' % {'prefixes': prefixes, 'ruleset': ruleset}
+    context = '%(prefixes)s\n%(ruleset)s' % {'prefixes': prefixes, 'ruleset': ruleset}
 
     return comment + context
 

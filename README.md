@@ -26,6 +26,11 @@ Then just start de client:
 
     $ lsd-cli
 
+## Build & Publish
+
+    $ pypy3 setup.py build bdist_wheel
+
+    $ twine upload -u <USERNAME> -p <PASSWORD> dist/lsd_cli-<VERSION>-py2.py3-none-any.whl
 
 ## Taste some awesome lsd-cli!
 

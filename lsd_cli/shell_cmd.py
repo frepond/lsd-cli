@@ -216,7 +216,7 @@ def __dump_ruleset(shell_ctx):
     includes = '\n'.join(shell_ctx['includes'])
     rules = '\n'.join(shell_ctx['rules'])
 
-    return includes + rules
+    return includes + '\n\n' + rules
 
 
 def __dump_conext(shell_ctx):

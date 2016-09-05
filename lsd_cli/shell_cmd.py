@@ -6,7 +6,7 @@ import re
 import click
 from lsd_cli.print_utils import (print_json_result, print_leaplog_result,
                                  underline)
-from lsd_cli.vis import visualise
+from lsd_cli.vis import browse, visualise
 from xtermcolor import colorize
 
 RE_CMD = re.compile(r'(\w+)\((.*)\)$')
@@ -264,8 +264,14 @@ def __write_retract(shell_ctx, params):
     __write(shell_ctx, params)
 
 
-def __vis(shell_ctx, filename):
+def __browse(shell_ctx, filename):
     result = __exec_leaplog(shell_ctx, filename, content='application/sparql-results+json')
+
+    browse(result)
+
+
+def __vis(shell_ctx, filename):
+    result = __exec_leaplog(shell_ctx, filename, content='application/json')
 
     visualise(result)
 
@@ -302,8 +308,10 @@ __COMMANDS = {
                       'help': 'Write an retract on lsd.'},
     'rule': {'cmd': __rule, 'name': '().',
              'help': 'Partial rule definition for the current shell session.'},
+    'browse': {'cmd': __browse, 'name': 'vis(filename)',
+             'help': 'Browse query results in the default browser.'},
     'vis': {'cmd': __vis, 'name': 'vis(filename)',
-             'help': 'Visualise query results in the default browser.'},
+             'help': 'Visualise query results graph in the default browser.'},
     '@prefix': {'cmd': __prefix, 'name': '@prefix prefix: <uri>.',
                 'help': "Define a new url prefix to use during the shell session."},
     '@include': {'cmd': __include, 'name': '@include <uri>.',
